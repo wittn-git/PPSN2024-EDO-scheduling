@@ -68,8 +68,7 @@ class NumericMutation(Mutation):
                 i_1 = np.random.randint(problem.m)
                 i_2 = np.random.randint(len(X[i, 0][i_1]))
                 X[i, 0][i_1][i_2] = max(0, X[i, 0][i_1][i_2]-1)
-
-
+                
         return X
     
 class EqualListElimination(ElementwiseDuplicateElimination):

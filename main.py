@@ -15,12 +15,11 @@ if __name__ == '__main__':
 
     res = minimize(ParallelMachineScheduling(3, 3),
                 algorithm,
-                ('n_gen', 30),
+                ('n_gen', 100),
                 seed=1,
                 verbose=False)
 
-    Scatter().add(res.F).show()
-    S = [x[0].schedule for x in res.X]
+    #Scatter().add(res.F).show()
     print(res.F)
-    for s in S:
-        print(s)
+    for x in res.opt.get("X"):
+        print(x[0])
