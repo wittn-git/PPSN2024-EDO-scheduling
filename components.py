@@ -1,34 +1,23 @@
 import numpy as np
 from schedule import Schedule
-from pymoo.core.problem import ElementwiseProblem
 from pymoo.core.sampling import Sampling
 from pymoo.core.crossover import Crossover
 from pymoo.core.mutation import Mutation
 from pymoo.core.duplicate import ElementwiseDuplicateElimination
 
-class ParallelMachineScheduling(ElementwiseProblem):
-
-    def __init__(self, n, m):
-        self.n = n
-        self.m = m
-        vars = {
-            "M": Schedule
-        }
-        super().__init__(vars=vars, n_obj=2)
-
-    def _evaluate(self, x, out, *args, **kwargs):
-        out["F"] = np.array([- self.f(x), - self.g(x)], dtype=float)
-    
-    def f(self, X):
-        return sum([np.sum(x) for x in X[0]])
-
-    def g(self, X):
-        return sum([x.count(1) for x in X[0]])
-
 class RandomScheduleSampling(Sampling):
 
     def _do(self, problem, n_samples, **kwargs):
-        X = [[Schedule([[np.random.randint(0, 5) for _ in range(problem.n)] for _ in range(problem.m)])] for _ in range(n_samples)]
+        X = []
+        for _ in range(n_samples):
+            jobs = np.arange(problem.n_jobs)
+            x = [[] for _ in range(problem.n_machines)]
+            while jobs.any():
+                job = np.random.choice(jobs)
+                x[np.random.randint(problem.n_machines)].append(job)
+                jobs = jobs[jobs != job]
+            X.append(Schedule(x))
+        print(X)
         return np.array(X)
 
 class ListExchangeCrossover(Crossover):
@@ -51,7 +40,7 @@ class ListExchangeCrossover(Crossover):
             Y[0, k], Y[1, k] = [Schedule(off_a)], [Schedule(off_b)]
         return Y
 
-class NumericMutation(Mutation):
+class SwapAndTransferMutation(Mutation):
     def __init__(self):
         super().__init__()
 
@@ -61,19 +50,25 @@ class NumericMutation(Mutation):
 
             if r < 0.1:
                 i_1 = np.random.randint(problem.m)
-                i_2 = np.random.randint(len(X[i, 0][i_1]))
-                X[i, 0][i_1][i_2] = min(9, X[i, 0][i_1][i_2]+1)
+                j_1 = np.random.randint(len(X[i, 0][i_1])-1)
+                j_2 = np.random.randint(j_1, len(X[i, 0][i_1]))
+                X[i, 0][i_1][j_1], X[i, 0][i_1][j_2] = X[i, 0][i_1][j_2], X[i, 0][i_1][j_1]
 
             elif r < 0.2:
                 i_1 = np.random.randint(problem.m)
-                i_2 = np.random.randint(len(X[i, 0][i_1]))
-                X[i, 0][i_1][i_2] = max(0, X[i, 0][i_1][i_2]-1)
+                i_2 = np.random.randint(problem.m)
+                j_1 = np.random.randint(len(X[i, 0][i_1]))
+                j_2 = np.random.randint(len(X[i, 0][i_2]))
+                job = X[i, 0][i_1][j_1]
+                del X[i, 0][i_1][j_1]
+                X[i, 0][i_2].insert(j_2, job)
                 
         return X
     
 class EqualListElimination(ElementwiseDuplicateElimination):
 
     def is_equal(self, a, b):
+        print(a.X[0])
         A, B = a.X[0].sort(), b.X[0].sort()
         for arr1, arr2 in zip(A, B):
             if not np.array_equal(arr1, arr2):
