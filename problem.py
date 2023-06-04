@@ -65,7 +65,7 @@ def create_random_parallel_problem(n_machines, n_jobs, seed=None):
     release_dates = np.random.randint(0, due_dates - processing_times + 1, size=n_jobs)
     return ParallelMachineScheduling(n_machines, processing_times, release_dates, due_dates)
 
-def visualize(problem, X):
+def visualize(problem, X, filename=None):
 
     fig, ax = plt.subplots()
 
@@ -88,4 +88,6 @@ def visualize(problem, X):
             ax.add_patch(plt.Rectangle((starting_times[v], j+0.6),problem.processing_times[v], 0.8, color='b', alpha=0.5))
             ax.text(starting_times[v]+problem.processing_times[v]/2, j+0.5, f"Job {v}", ha='center', va='center')
     
-    plt.show()
+    if filename is not None:
+        plt.savefig(filename)
+    else: plt.show()

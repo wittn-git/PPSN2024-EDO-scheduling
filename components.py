@@ -17,7 +17,6 @@ class RandomScheduleSampling(Sampling):
                 x[np.random.randint(problem.n_machines)].append(job)
                 jobs = jobs[jobs != job]
             X.append(Schedule(x))
-        print(X)
         return np.array(X)
 
 class ListExchangeCrossover(Crossover):
