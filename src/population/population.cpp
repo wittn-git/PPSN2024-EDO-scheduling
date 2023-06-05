@@ -2,9 +2,6 @@
 
 // Class Implementation ---------------------------------------------------------------------------------------------------------------------
 
-using T = std::vector<std::vector<int>>; // Type of genes
-using L = int; // Type of fitness values
-
 Population::Population(
     int seed,
     const std::function<std::vector<T>(std::mt19937&)>& initialize,
@@ -12,7 +9,7 @@ Population::Population(
     const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents,
     const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate,
     const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine,
-    const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&)>& selectSurvivors
+    const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
 ) : generator(seed), evaluate(evaluate), selectParents(selectParents), mutate(mutate), recombine(recombine), selectSurvivors(selectSurvivors) {
     assert((evaluate != nullptr && selectParents != nullptr));
     genes = initialize(generator);
@@ -23,7 +20,7 @@ void Population::execute() {
     std::vector<T> parents = selectParents(genes, fitnesses, generator);
     std::vector<T> children = (recombine == nullptr) ? parents : recombine(parents, generator);
     children = (mutate == nullptr) ? children : mutate(children, generator);
-    genes = (selectSurvivors == nullptr) ? children : selectSurvivors(genes, fitnesses, children);
+    genes = (selectSurvivors == nullptr) ? children : selectSurvivors(genes, fitnesses, children, generator);
 }
 
 void Population::execute_multiple(int generations){
@@ -65,13 +62,37 @@ std::string Population::to_string(){
             s += "\n";
             machine++;
         }
-        s += "\n\n";
+        s += "\n";
     }
     return s;
 }
 
+std::string Population::bests_to_string(bool reciproc){
+    std::string s;
+    std::vector<T> bests = get_bests(false);
+    std::vector<L> fitnesses = evaluate(bests);
+    for (int i = 0; i < bests.size(); i++) {
+        s += "Fitness: ";
+        s += reciproc ? std::to_string(1/fitnesses[i]) : std::to_string(fitnesses[i]);
+        s += "\n";
+        int machine = 1;
+        for (auto chromosome : bests[i]) {
+            s += std::to_string(machine) + ": ";
+            for(auto job : chromosome){
+                s += std::to_string(job) + " ";
+            }
+            s += "\n";
+            machine++;
+        }
+        s += "\n";
+    }
+    return s;
+}
+
+/*
 void Population::set_evaluate(const std::function<std::vector<L>(const std::vector<T>&)>& evaluate){ this->evaluate = evaluate;}
 void Population::set_selectParents(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents){ this->selectParents = selectParents;}
 void Population::set_mutate(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate){ this->mutate = mutate;}
 void Population::set_recombine(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine){ this->recombine = recombine;}
 void Population::set_selectSurvivors(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors){ this->selectSurvivors = selectSurvivors;}
+*/

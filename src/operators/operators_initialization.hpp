@@ -1,9 +1,10 @@
 #include <functional>
 #include <vector>
 #include <random>
+#include <algorithm>
 
 using T = std::vector<std::vector<int>>;
-using L = int;
+using L = double;
 
 //Initialization Operators ----------------------------------------------------------
 
@@ -18,7 +19,7 @@ using L = int;
 std::function<std::vector<T>(std::mt19937&)> initialize_random(int population_size, int jobs_n, int machines_n) {
     return [population_size, jobs_n, machines_n](std::mt19937& generator) -> std::vector<T> {
         std::vector<T> genes(population_size);
-        std::uniform_int_distribution< int > distribute_machines(0, machines_n);
+        std::uniform_int_distribution< int > distribute_machines(0, machines_n-1);
         std::transform(genes.begin(), genes.end(), genes.begin(), [population_size, jobs_n, machines_n, &generator, distribute_machines](T& gene) mutable -> T {
             gene = std::vector<std::vector<int>>(machines_n);
             for(int i = 0; i < jobs_n; i++){

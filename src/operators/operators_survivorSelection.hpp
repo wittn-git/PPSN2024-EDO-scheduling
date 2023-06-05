@@ -1,9 +1,10 @@
 #include <functional>
 #include <vector>
 #include <numeric>
+#include <random>
 
 using T = std::vector<std::vector<int>>;
-using L = int;
+using L = double;
 
 // Survivor selection operators ----------------------------------------------------
 
@@ -14,8 +15,8 @@ using L = int;
         - evaluate: function taking a vector of genes and returning a vector of fitnesses
 */
 
-std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&)> select_mu(int mu, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
-    return [mu, evaluate](const std::vector<T>& parents, const std::vector<L>& fitnesses_parents, const std::vector<T>& offspring) -> std::vector<T> {
+std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_mu(int mu, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
+    return [mu, evaluate](const std::vector<T>& parents, const std::vector<L>& fitnesses_parents, const std::vector<T>& offspring, std::mt19937& generator) -> std::vector<T> {
         std::vector<T> combined = parents;
         combined.insert(combined.end(), offspring.begin(), offspring.end());
         std::vector<L> fitnesses = fitnesses_parents;

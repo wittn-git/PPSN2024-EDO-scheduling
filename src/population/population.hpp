@@ -9,7 +9,7 @@
 // Class Outline ----------------------------------------------------------------------------------------------------------------------------
 
 using T = std::vector<std::vector<int>>; // Type of genes
-using L = int; // Type of fitness values
+using L = double; // Type of fitness values
 
 class Population{
 
@@ -27,7 +27,7 @@ private:
     // Function taking a vector of genes of type T and returning a vector of recombined genes of type T
     const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine;
     // Function taking two vectors of genes of type T (parents and children) and returning a selected vector of genes of type T
-    const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&)>& selectSurvivors;
+    const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors;
 
 public:
 
@@ -39,7 +39,7 @@ public:
         const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents,
         const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate = nullptr,
         const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine = nullptr,
-        const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&)>& selectSurvivors = nullptr
+        const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors = nullptr
     );
 
     void execute(); //executes one iteration of the evolutionary algorithm
@@ -47,11 +47,12 @@ public:
     std::vector<T> get_bests(bool keep_duplicats); //returns the best genes in the population
     std::vector<T> get_genes(); //returns the current genes in the population
     std::string to_string(); //returns a string representation of the population
-
+    std::string bests_to_string(bool reciproc); //returns a string representation of the best genes in the population, reciproc = true will return the reciproc of the fitness values
+    /*
     void set_evaluate(const std::function<std::vector<L>(const std::vector<T>&)>& evaluate);
     void set_selectParents(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents);
     void set_mutate(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate);
     void set_recombine(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine);
     void set_selectSurvivors(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors);
-
+    */
 };

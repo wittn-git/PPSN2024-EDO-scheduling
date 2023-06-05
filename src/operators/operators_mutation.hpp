@@ -3,7 +3,7 @@
 #include <random>
 
 using T = std::vector<std::vector<int>>;
-using L = int;
+using L = double;
 
 // Mutation Operators ---------------------------------------------------------------
 
