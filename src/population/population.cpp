@@ -4,12 +4,12 @@
 
 Population::Population(
     int seed,
-    const std::function<std::vector<T>(std::mt19937&)>& initialize,
-    const std::function<std::vector<L>(const std::vector<T>&)>& evaluate,
-    const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents,
-    const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate,
-    const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine,
-    const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
+    std::function<std::vector<T>(std::mt19937&)>& initialize,
+    std::function<std::vector<L>(const std::vector<T>&)>& evaluate,
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine,
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
 ) : generator(seed), evaluate(evaluate), selectParents(selectParents), mutate(mutate), recombine(recombine), selectSurvivors(selectSurvivors) {
     assert((evaluate != nullptr && selectParents != nullptr));
     genes = initialize(generator);
@@ -89,10 +89,8 @@ std::string Population::bests_to_string(bool reciproc){
     return s;
 }
 
-/*
 void Population::set_evaluate(const std::function<std::vector<L>(const std::vector<T>&)>& evaluate){ this->evaluate = evaluate;}
 void Population::set_selectParents(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents){ this->selectParents = selectParents;}
 void Population::set_mutate(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate){ this->mutate = mutate;}
 void Population::set_recombine(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine){ this->recombine = recombine;}
 void Population::set_selectSurvivors(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors){ this->selectSurvivors = selectSurvivors;}
-*/
