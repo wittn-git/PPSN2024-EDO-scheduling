@@ -14,10 +14,9 @@ void objective_optimization(
     std::function<std::vector<L>(const std::vector<T>&)> evaluate_obj,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj
 ){
-    // TODO include b in the variation operators
     population.set_evaluate(evaluate_obj);
     population.set_selectSurvivors(select_survivors_obj);
-    population.execute_multiple(obj_generations_n);
+    population.execute_multiple(obj_generations_n, bound_value);
 }
 
 int bound_change(
@@ -48,11 +47,10 @@ void diversity_optimization(
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div,
     std::function<bool(const std::vector<T>&, const std::vector<T>&)> compare_diversity
 ){
-    // TODO include b in the variation operators
     int i = 0;
     while(i < div_generations_con){
         std::vector<T> old_genes = population.get_genes();
-        population.execute();
+        population.execute(bound_value);
         std::vector<T> new_genes = population.get_genes();
         if(!compare_diversity(old_genes, new_genes)){
             population.set_genes(old_genes);
@@ -73,8 +71,8 @@ void noah(
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents,
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine,
+    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate,
+    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine,
     std::function<bool(const std::vector<T>&, const std::vector<T>&)> compare_diversity
 ){
     Population population(0, initialize, evaluate_obj, select_parents, mutate, recombine, select_survivors_obj);
