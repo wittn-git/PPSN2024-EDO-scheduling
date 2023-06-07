@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Bachelor_Thesis 
                 ${CMAKE_SOURCE_DIR}/src/main.cpp
-                ${CMAKE_SOURCE_DIR}/src/population/population.cpp
             )                      
 
 target_compile_features(Bachelor_Thesis PUBLIC cxx_std_20)
