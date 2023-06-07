@@ -1,6 +1,9 @@
+#pragma once
+
 #include <functional>
 #include <vector>
 #include <random>
+#include <assert.h>
 
 using T = std::vector<std::vector<int>>;
 using L = double;
@@ -10,14 +13,14 @@ using L = double;
 /*
     Roulette Selection: Selection from all individuals using a roulette simulation, where higher fitness translates to higher probability
     Arguments:
-        - evaluate: function taking a vector of genes and returning a vector of fitnesses
+        - parent_count: number of individuals to select
 */
 
-std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_roulette() {
-    return [](const std::vector<T>& genes, const std::vector<L>& fitnesses, std::mt19937& generator) -> std::vector<T> {
-        std::vector<T> selected_genes(fitnesses.size());
+std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_roulette(int parent_count) {
+    return [parent_count](const std::vector<T>& genes, const std::vector<L>& fitnesses, std::mt19937& generator) -> std::vector<T> {
+        std::vector<T> selected_genes(parent_count);
         double total_fitness = std::accumulate(fitnesses.begin(), fitnesses.end(), 0.0);
-        std::vector<double> probabilities(fitnesses.size());
+        std::vector<double> probabilities(parent_count);
         std::transform(fitnesses.begin(), fitnesses.end(), probabilities.begin(), [&](double fitness) {
             return fitness / total_fitness;
         });
@@ -36,12 +39,14 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::
     Tournament Parent Selection: Take a random subgroup of a specified size and choose the one with the highest fitness value
     Arguments:
         - tournament_size: size of the chosen subgroup
-        - evaluate:        function taking a vector of genes and returning a vector of fitnesses
+        - parent_count:    number of individuals to select
 */
 
-std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_tournament(int tournament_size) {
-    return [tournament_size](const std::vector<T>& genes, const std::vector<L>& fitnesses, std::mt19937& generator) -> std::vector<T> {
-        std::vector<T> selected_genes(genes.size());
+std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_tournament(int tournament_size, int parent_count) {
+    return [tournament_size, parent_count](const std::vector<T>& genes, const std::vector<L>& fitnesses, std::mt19937& generator) -> std::vector<T> {
+        assert(tournament_size <= genes.size());
+        int selected_genes_n = parent_count > genes.size() ? genes.size() : parent_count;
+        std::vector<T> selected_genes(parent_count);
         std::uniform_int_distribution< int > distribute_point(0, genes.size() - 1 );
         std::transform(selected_genes.begin(), selected_genes.end(), selected_genes.begin(), [&](T& selected_gene) mutable -> T {
             std::vector<int> tournament_genes(tournament_size);
