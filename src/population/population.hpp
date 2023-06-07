@@ -15,6 +15,7 @@ private:
 
     std::vector<T> genes;
     std::mt19937 generator;
+    int generation;
 
     // Function taking a vector of genes of type T and returning its fitness value vector of type L
     std::function<std::vector<L>(const std::vector<T>&)>& evaluate;
@@ -44,6 +45,7 @@ public:
     void execute_multiple(int generations, double quality_bound);   //executes 'generations' iterations of the evolutionary algorithm
     std::vector<T> get_bests(bool keep_duplicats);                  //returns the best genes in the population
     std::vector<T> get_genes();                                     //returns the current genes in the population
+    int get_generation();                                          //returns the number of generation that have been executed
     void set_genes(std::vector<T> new_genes);                       //sets the genes in the population to new_genes
     std::string to_string();                                        //returns a string representation of the population
     std::string bests_to_string(bool reciproc);                     //returns a string representation of the best genes in the population, reciproc = true will return the reciproc of the fitness values
@@ -68,7 +70,7 @@ Population<T, L>::Population(
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& mutate,
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& recombine,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
-) : generator(seed), evaluate(evaluate), selectParents(selectParents), mutate(mutate), recombine(recombine), selectSurvivors(selectSurvivors) {
+) : generation(0), generator(seed), evaluate(evaluate), selectParents(selectParents), mutate(mutate), recombine(recombine), selectSurvivors(selectSurvivors) {
     assert((evaluate != nullptr && selectParents != nullptr));
     genes = initialize(generator);
     assert(genes.size() > 0);
@@ -76,6 +78,7 @@ Population<T, L>::Population(
 
 template <typename T, typename L>
 void Population<T, L>::execute(double quality_bound) {
+    generation++;
     std::vector<L> fitnesses = evaluate(genes);
     assert(fitnesses.size() == genes.size());
     std::vector<T> parents = selectParents(genes, fitnesses, generator);
@@ -85,7 +88,7 @@ void Population<T, L>::execute(double quality_bound) {
 }
 
 template <typename T, typename L>
-void Population<T, L>::execute_multiple(int generations, double quality_bound){
+void Population<T, L>::execute_multiple(int generation, double quality_bound){
     for(int i = 0; i < generations; i++){
         execute(quality_bound);
     }
@@ -112,6 +115,11 @@ std::vector<T> Population<T, L>::get_bests(bool keep_duplicats){
 template <typename T, typename L>
 std::vector<T> Population<T, L>::get_genes(){
     return genes;
+}
+
+template <typename T, typename L>
+int Population<T, L>::get_generation(){
+    return generation;
 }
 
 template <typename T, typename L>
