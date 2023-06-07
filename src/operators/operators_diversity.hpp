@@ -17,14 +17,20 @@ double euclideanNorm(const std::vector<double> vec) {
     return std::sqrt(squareSum);
 }
 
-double longest_common_sequence_machine(M machine1, M machine2){
-    if(machine1.size() == 0 || machine2.size() == 0){
-        return 0;
+double longest_common_sequence_machine(M machine1, M machine2) {
+    int size1 = machine1.size();
+    int size2 = machine2.size();
+    std::vector<std::vector<double>> dp(size1 + 1, std::vector<double>(size2 + 1, 0));
+    for (int i = size1 - 1; i >= 0; i--) {
+        for (int j = size2 - 1; j >= 0; j--) {
+            if (machine1[i] == machine2[j]) {
+                dp[i][j] = 1 + dp[i + 1][j + 1];
+            } else {
+                dp[i][j] = std::max(dp[i + 1][j], dp[i][j + 1]);
+            }
+        }
     }
-    if(machine1[0] == machine2[0]){
-        return 1 + longest_common_sequence_machine(std::vector<int>(machine1.begin()+1, machine1.end()), std::vector<int>(machine2.begin()+1, machine2.end()));
-    }
-    return std::max(longest_common_sequence_machine(std::vector<int>(machine1.begin()+1, machine1.end()), machine2), longest_common_sequence_machine(machine1, std::vector<int>(machine2.begin()+1, machine2.end())));
+    return dp[0][0];
 }
 
 double longest_common_sequence_schedule(T schedule1, T schedule2){
