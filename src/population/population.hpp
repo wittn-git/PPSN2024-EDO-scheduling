@@ -43,12 +43,14 @@ public:
 
     void execute(double quality_bound);                             //executes one iteration of the evolutionary algorithm
     void execute_multiple(int generations, double quality_bound);   //executes 'generations' iterations of the evolutionary algorithm
-    std::vector<T> get_bests(bool keep_duplicats);                  //returns the best genes in the population
+    //returns the best genes in the population, evaluate = nullptr will use the evaluate function of the population
+    std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate_);                  
     std::vector<T> get_genes();                                     //returns the current genes in the population
-    int get_generation();                                          //returns the number of generation that have been executed
+    int get_generation();                                           //returns the number of generation that have been executed
     void set_genes(std::vector<T> new_genes);                       //sets the genes in the population to new_genes
     std::string to_string();                                        //returns a string representation of the population
-    std::string bests_to_string(bool reciproc);                     //returns a string representation of the best genes in the population, reciproc = true will return the reciproc of the fitness values
+    //returns a string representation of the best genes in the population, reciproc = true will return the reciproc of the fitness values, evaluate = nullptr will use the evaluate function of the population
+    std::string bests_to_string(bool reciproc, std::function<std::vector<L>(const std::vector<T>&)>& evaluate_);                     
     
     // setters of the operator functions
     void set_evaluate(const std::function<std::vector<L>(const std::vector<T>&)>& evaluate); //sets the evaluate function
@@ -72,7 +74,6 @@ Population<T, L>::Population(
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
 ) : generation(0), generator(seed), evaluate(evaluate), selectParents(selectParents), mutate(mutate), recombine(recombine), selectSurvivors(selectSurvivors) {
     assert(initialize != nullptr && "initialize function must be set");
-    assert((evaluate != nullptr || (selectParents == nullptr && selectSurvivors == nullptr)) && "evaluate function must be set if selectParents or selectSurvivors are set");
     genes = initialize(generator);
     assert(genes.size() > 0 && "initialize function must return a non-empty vector");
 }
@@ -96,9 +97,9 @@ void Population<T, L>::execute_multiple(int generations, double quality_bound){
 }
 
 template <typename T, typename L>
-std::vector<T> Population<T, L>::get_bests(bool keep_duplicats){
+std::vector<T> Population<T, L>::get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate_){
     std::vector<T> bests;
-    std::vector<L> fitnesses = evaluate(genes);
+    std::vector<L> fitnesses = evaluate_ == nullptr ? evaluate(genes) : evaluate_(genes);
     auto max_it = std::max_element(fitnesses.begin(), fitnesses.end());
     for(int i = 0; i < genes.size(); i++){
         if(fitnesses[i] == *max_it){
@@ -147,10 +148,10 @@ std::string Population<T, L>::to_string(){
 }
 
 template <typename T, typename L>
-std::string Population<T, L>::bests_to_string(bool reciproc){
+std::string Population<T, L>::bests_to_string(bool reciproc, std::function<std::vector<L>(const std::vector<T>&)>& evaluate_){
     std::string s;
-    std::vector<T> bests = get_bests(false);
-    std::vector<L> fitnesses = evaluate(bests);
+    std::vector<T> bests = get_bests(false, evaluate);
+    std::vector<L> fitnesses = evaluate_ == nullptr ? evaluate(bests) : evaluate_(bests);
     for (int i = 0; i < bests.size(); i++) {
         s += "Fitness: ";
         s += reciproc ? std::to_string(1/fitnesses[i]) : std::to_string(fitnesses[i]);

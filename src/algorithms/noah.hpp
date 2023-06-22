@@ -53,7 +53,7 @@ void diversity_optimization(
     int div_generations_con,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div,
-    std::function<double(const std::vector<T>&)> diversity_measure
+    std::function<double(const std::vector<T>&)> diversity_value
 ){
     int i = 0;
     population.set_selectParents(select_parents_div);
@@ -62,7 +62,7 @@ void diversity_optimization(
         std::vector<T> old_genes = population.get_genes();
         population.execute(bound_value);
         std::vector<T> new_genes = population.get_genes();
-        if(diversity_measure(old_genes) > diversity_measure(new_genes)){
+        if(diversity_value(old_genes) > diversity_value(new_genes)){
             population.set_genes(old_genes);
             i++;
         }
@@ -83,38 +83,46 @@ void noah(
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div,
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate,
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine,
-    std::function<double(const std::vector<T>&)> diversity_measure
+    std::function<double(const std::vector<T>&)> diversity_value
 ){
     Population population(0, initialize, evaluate, select_parents_obj, mutate, recombine, select_survivors_obj);
     double bound_value = std::numeric_limits<double>::max();
+    int iteration = 0;
     while( bound_value > barrier_value && !termination_criterion(population) ){
         objective_optimization(population, obj_generations_n, bound_value, select_parents_obj, select_survivors_obj);
         bound_value = bound_change(population, evaluate, remaining_solutions_n);
-        diversity_optimization(population, bound_value, div_generations_con, select_parents_div, select_survivors_div, diversity_measure);
-    }
-    std::cout << population.bests_to_string(true) << std::endl;
+        diversity_optimization(population, bound_value, div_generations_con, select_parents_div, select_survivors_div, diversity_value);
+    } 
+    std::function<std::vector<L>(const std::vector<T>&)> evaluate_nullptr = nullptr;
+    std::cout << "Noah" << std::endl << "Generations: " << population.get_generation() << std::endl << "Best Individuals: " << std::endl;
+    std::cout << population.bests_to_string(true, evaluate_nullptr) << std::endl;
 }
 
-void noah_test(){
-    std::vector<int> processing_times   = {1, 1, 2, 6, 10, 2,  7,  7,  9,  15};
-    std::vector<int> release_dates      = {0, 0, 0, 1, 10, 30, 0,  2,  5,  1};
-    std::vector<int> due_dates          = {10,2, 4, 7, 21, 36, 20, 10, 17, 17};
+void noah_test(
+    int m,
+    std::vector<int> processing_times, 
+    std::vector<int> release_dates, 
+    std::vector<int> due_dates,
+    int population_size,
+    int barrier_value,
+    int obj_generations_n,
+    int remaining_solutions_n,
+    int div_generations_con,
+    int termination_generations,
+    double mutation_rate,
+    int tournament_size
+){
 
-    int population_size = 25;
-    int barrier_value = 60;
-    int obj_generations_n = 5;
-    int remaining_solutions_n = population_size;
-    int div_generations_con = 3;
-
-    std::function<double(const std::vector<T>&)> diversity_measure = diversity_LCS();
-    std::function<bool(Population<T,L>&)> termination_criterion = terminate_generations(25);
-    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(population_size, 10, 1);
+    std::function<double(const T&, const T&)> diversity_measure = diversity_DFM();
+    std::function<double(const std::vector<T>&)> diversity_value = diversity_vector(diversity_measure);
+    std::function<bool(Population<T,L>&)> termination_criterion = terminate_generations(termination_generations);
+    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(population_size, processing_times.size(), m);
     std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_makespan(processing_times, release_dates);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj = select_mu(population_size, evaluate);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div = select_div(diversity_measure);
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj = select_tournament(3, population_size);
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div = select_tournament(3, 1);
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(0.1);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj = select_tournament(tournament_size, population_size);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div = select_tournament(tournament_size, 1);
+    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine = nullptr;
 
     noah(
@@ -131,6 +139,6 @@ void noah_test(){
         select_parents_div,
         mutate,
         recombine,
-        diversity_measure
+        diversity_value
     );
 }

@@ -12,15 +12,9 @@
 using T = std::vector<std::vector<int>>;
 using L = double;
 
-void simple_test(){
+void simple_test(int m, std::vector<int> processing_times, std::vector<int> release_dates, std::vector<int> due_dates, int population_size, int generations){
 
-    std::vector<int> processing_times   = {1, 1, 2, 6, 10, 2,  7,  7,  9,  15};
-    std::vector<int> release_dates      = {0, 0, 0, 1, 10, 30, 0,  2,  5,  1};
-    std::vector<int> due_dates          = {10,2, 4, 7, 21, 36, 20, 10, 17, 17};
-
-    int population_size = 25;
-
-    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(population_size, 10, 1);
+    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(population_size, processing_times.size(), m);
     std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_makespan(processing_times, release_dates);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents = select_tournament(3, population_size);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(0.1);
@@ -28,6 +22,8 @@ void simple_test(){
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_mu(10, evaluate);
 
     Population population(0, initialize, evaluate, select_parents, mutate, recombine, select_survivors);
-    population.execute_multiple(25, std::numeric_limits<int>::max());
-    std::cout << population.bests_to_string(true) << std::endl;
+    population.execute_multiple(generations, std::numeric_limits<int>::max());
+    std::function<std::vector<L>(const std::vector<T>&)> evaluate_nullptr = nullptr;
+    std::cout << "Simple" << std::endl << "Generations: " << population.get_generation() << std::endl << "Best Individuals: " << std::endl;
+    std::cout << population.bests_to_string(true, evaluate_nullptr) << std::endl;
 }

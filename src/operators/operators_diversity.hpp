@@ -6,8 +6,7 @@
 #include <vector>
 #include <functional>
 
-using M = std::vector<int>;
-using T = std::vector<M>;
+using T = std::vector<std::vector<int>>;
 using L = double;
 
 // Utility ----------------------------------------------------------------------------
@@ -17,47 +16,44 @@ double euclideanNorm(const std::vector<double> vec) {
     return std::sqrt(squareSum);
 }
 
-double longest_common_sequence_machine(M machine1, M machine2) {
-    int size1 = machine1.size();
-    int size2 = machine2.size();
-    std::vector<std::vector<double>> dp(size1 + 1, std::vector<double>(size2 + 1, 0));
-    for (int i = size1 - 1; i >= 0; i--) {
-        for (int j = size2 - 1; j >= 0; j--) {
-            if (machine1[i] == machine2[j]) {
-                dp[i][j] = 1 + dp[i + 1][j + 1];
-            } else {
-                dp[i][j] = std::max(dp[i + 1][j], dp[i][j + 1]);
-            }
-        }
-    }
-    return dp[0][0];
-}
+// Diversity measure operators (gene level) ------------------------------------------
 
-double longest_common_sequence_schedule(T schedule1, T schedule2){
-    double minVal = std::numeric_limits<double>::max();
-    for(auto machine1 : schedule1){
-        for(auto machine2 : schedule2){
-            double lcsm = longest_common_sequence_machine(machine1, machine2);
-            if(lcsm < minVal){
-                minVal = lcsm;
-            }
-        }
-    }
-    return minVal;
-}
-
-// Diversity measure operators --------------------------------------------------------
-
-std::function<double(const std::vector<T>&)> diversity_LCS(){
-    return [](const std::vector<T>& genes) -> double {
+std::function<double(const T& , const T&)> diversity_DFM(){
+    return [](const T& gene1, const T& gene2) -> double {
         std::vector<double> diversity;
-        for(auto gene1 : genes){
-            for(auto gene2 : genes){
-                if(gene1 != gene2){
-                    diversity.push_back(longest_common_sequence_schedule(gene1, gene2));
+        int common_DFS = 0;
+        for(auto machine1 : gene1){
+            for(auto machine2 : gene2){
+                for(int i = 0; i < machine1.size() - 1; i++){
+                    for(int j = 0; j < machine2.size() - 1; j++){
+                        if(machine1[i] == machine2[j] && machine1[i+1] == machine2[j+1]){
+                            common_DFS++;
+                        }
+                    }
                 }
             }
         }
-        return 1/euclideanNorm(diversity);
+        return common_DFS;
+    };
+}
+
+// Diversity measure operators (population level) --------------------------------------
+
+std::function<double(const std::vector<T>&)> diversity_vector(std::function<double(const T& , const T&)> diversity_measure){
+    return [diversity_measure](const std::vector<T>& genes) -> double {
+        std::vector<double> diversity_scores;
+        for(auto gene1 : genes){
+            for(auto gene2: genes){
+                if(gene1 == gene2) continue;
+                diversity_scores.emplace_back(diversity_measure(gene1, gene2));
+            }
+        }
+        return 1/euclideanNorm(diversity_scores);
+    };
+}
+
+std::function<double(const std::vector<double>&)> diversity_vector(){
+    return [](const std::vector<double>& diversity_scores) -> double {
+        return 1/euclideanNorm(diversity_scores);
     };
 }
