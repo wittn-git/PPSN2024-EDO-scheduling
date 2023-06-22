@@ -43,14 +43,14 @@ public:
 
     void execute(double quality_bound);                             //executes one iteration of the evolutionary algorithm
     void execute_multiple(int generations, double quality_bound);   //executes 'generations' iterations of the evolutionary algorithm
-    //returns the best genes in the population, evaluate = nullptr will use the evaluate function of the population
-    std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate_);                  
+    //returns the best genes in the population, evaluate = nullptr will use the evaluate function of the population, otherwise it will use the given evaluate function
+    std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                  
     std::vector<T> get_genes();                                     //returns the current genes in the population
     int get_generation();                                           //returns the number of generation that have been executed
     void set_genes(std::vector<T> new_genes);                       //sets the genes in the population to new_genes
     std::string to_string();                                        //returns a string representation of the population
-    //returns a string representation of the best genes in the population, negate = true will return the negate of the fitness values, evaluate = nullptr will use the evaluate function of the population
-    std::string bests_to_string(bool negate, std::function<std::vector<L>(const std::vector<T>&)>& evaluate_);                     
+    //returns a string representation of the best genes in the population, evaluate = nullptr will use the evaluate function of the population, otherwise it will use the given evaluate function
+    std::string bests_to_string(std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                     
     
     // setters of the operator functions
     void set_evaluate(const std::function<std::vector<L>(const std::vector<T>&)>& evaluate); //sets the evaluate function
@@ -148,13 +148,13 @@ std::string Population<T, L>::to_string(){
 }
 
 template <typename T, typename L>
-std::string Population<T, L>::bests_to_string(bool negate, std::function<std::vector<L>(const std::vector<T>&)>& evaluate){
+std::string Population<T, L>::bests_to_string(std::function<std::vector<L>(const std::vector<T>&)>& evaluate){
     std::string s;
     std::vector<T> bests = get_bests(false, evaluate);
     std::vector<L> fitnesses = evaluate(bests);
     for (int i = 0; i < bests.size(); i++) {
         s += "Fitness: ";
-        s += negate ? std::to_string(-fitnesses[i]) : std::to_string(fitnesses[i]);
+        s += std::to_string(fitnesses[i]);
         s += "\n";
         int machine = 1;
         for (auto chromosome : bests[i]) {

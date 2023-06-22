@@ -32,7 +32,7 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_makespan(std::vect
                 }
                 end_points.emplace_back(current_time);
             }
-            return (double) - *std::max_element(end_points.begin(), end_points.end());
+            return (double) (-(1) * *std::max_element(end_points.begin(), end_points.end()));
         });
         return fitnesses;
     };
@@ -64,16 +64,8 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_tardyjobs(std::vec
                     }
                 }
             }
-            return (double) - tardy_jobs_n;
+            return (double) ( (-1) * tardy_jobs_n);
         });
         return fitnesses;
     };
 }
-
-/*
-    Lateness Evaluation: Evaluates machine schedules based on the maximum lateness
-    Arguments:
-        - processing_times: Times it takes to complete each job
-        - release_dates:    Points in time where every job is released
-        - due_dates:        Points in time where every job is due
-*/
