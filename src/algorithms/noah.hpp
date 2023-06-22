@@ -1,5 +1,4 @@
 #include <limits>
-#include <iostream>
 #include <numeric>
 
 #include "../population/population.hpp"
@@ -69,7 +68,7 @@ void diversity_optimization(
     }
 }
 
-void noah(
+Population<T,L> noah(
     int barrier_value,
     int obj_generations_n,
     int remaining_solutions_n,
@@ -93,12 +92,10 @@ void noah(
         bound_value = bound_change(population, evaluate, remaining_solutions_n);
         diversity_optimization(population, bound_value, div_generations_con, select_parents_div, select_survivors_div, diversity_value);
     } 
-    std::function<std::vector<L>(const std::vector<T>&)> evaluate_nullptr = nullptr;
-    std::cout << "Noah" << std::endl << "Generations: " << population.get_generation() << std::endl << "Best Individuals: " << std::endl;
-    std::cout << population.bests_to_string(true, evaluate_nullptr) << std::endl;
+    return population;
 }
 
-void noah_test(
+Population<T,L> noah_test(
     int m,
     std::vector<int> processing_times, 
     std::vector<int> release_dates, 
@@ -125,7 +122,7 @@ void noah_test(
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine = nullptr;
 
-    noah(
+    return noah(
         barrier_value,
         obj_generations_n,
         remaining_solutions_n,

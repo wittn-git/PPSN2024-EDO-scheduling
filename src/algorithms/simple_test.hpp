@@ -12,7 +12,7 @@
 using T = std::vector<std::vector<int>>;
 using L = double;
 
-void simple_test(int m, std::vector<int> processing_times, std::vector<int> release_dates, std::vector<int> due_dates, int population_size, int generations){
+Population<T,L> simple_test(int m, std::vector<int> processing_times, std::vector<int> release_dates, std::vector<int> due_dates, int population_size, int generations){
 
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(population_size, processing_times.size(), m);
     std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_makespan(processing_times, release_dates);
@@ -23,7 +23,6 @@ void simple_test(int m, std::vector<int> processing_times, std::vector<int> rele
 
     Population population(0, initialize, evaluate, select_parents, mutate, recombine, select_survivors);
     population.execute_multiple(generations, std::numeric_limits<int>::max());
-    std::function<std::vector<L>(const std::vector<T>&)> evaluate_nullptr = nullptr;
-    std::cout << "Simple" << std::endl << "Generations: " << population.get_generation() << std::endl << "Best Individuals: " << std::endl;
-    std::cout << population.bests_to_string(true, evaluate_nullptr) << std::endl;
+    
+    return population;
 }

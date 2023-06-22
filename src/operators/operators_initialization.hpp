@@ -50,7 +50,7 @@ std::function<std::vector<T>(std::mt19937&)> initialize_quality(int population_s
                     std::shuffle(schedule.begin(), schedule.end(), generator);
                 }
                 return gene;
-            }while(evaluate({gene})[0] < (1+alpha) * OPT);       
+            }while(evaluate({gene})[0] > (1+alpha) * OPT);       
         });
         return genes;
     };

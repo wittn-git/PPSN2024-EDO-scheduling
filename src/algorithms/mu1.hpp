@@ -12,7 +12,7 @@
 using T = std::vector<std::vector<int>>;
 using L = double;
 
-void mu1(
+Population<T,L> mu1(
     std::function<bool(Population<T,L>&)> termination_criterion,
     std::function<std::vector<T>(std::mt19937&)> initialize,
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
@@ -26,11 +26,10 @@ void mu1(
     while(!termination_criterion(population)){
         population.execute(0);
     }
-    std::cout << "Simple" << std::endl << "Generations: " << population.get_generation() << std::endl << "Best Individuals: " << std::endl;
-    std::cout << population.bests_to_string(true, evaluate) << std::endl;
+    return population;
 }
 
-void mu1_test(
+Population<T,L> mu1_test(
     int m,
     std::vector<int> processing_times, 
     std::vector<int> release_dates, 
@@ -51,7 +50,7 @@ void mu1_test(
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine = nullptr;
 
-    mu1(
+    return mu1(
         termination_criterion,
         initialize,
         evaluate,
@@ -60,5 +59,4 @@ void mu1_test(
         mutate,
         recombine
     );
-
 }

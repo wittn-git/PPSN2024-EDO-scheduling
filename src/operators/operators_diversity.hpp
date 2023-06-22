@@ -42,10 +42,10 @@ std::function<double(const T& , const T&)> diversity_DFM(){
 std::function<double(const std::vector<T>&)> diversity_vector(std::function<double(const T& , const T&)> diversity_measure){
     return [diversity_measure](const std::vector<T>& genes) -> double {
         std::vector<double> diversity_scores;
-        for(auto gene1 : genes){
-            for(auto gene2: genes){
-                if(gene1 == gene2) continue;
-                diversity_scores.emplace_back(diversity_measure(gene1, gene2));
+        for(int i = 0; i < genes.size(); i++){
+            for(int j = i + 1; j < genes.size(); j++){
+                if(i == j) continue;
+                diversity_scores.emplace_back(diversity_measure(genes[i], genes[j]));
             }
         }
         return 1/euclideanNorm(diversity_scores);
