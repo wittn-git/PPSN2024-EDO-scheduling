@@ -43,13 +43,13 @@ public:
 
     void execute(double quality_bound);                             //executes one iteration of the evolutionary algorithm
     void execute_multiple(int generations, double quality_bound);   //executes 'generations' iterations of the evolutionary algorithm
-    //returns the best genes in the population, evaluate = nullptr will use the evaluate function of the population, otherwise it will use the given evaluate function
+    //returns the best genes in the population, using the given evaluate function
     std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                  
-    std::vector<T> get_genes();                                     //returns the current genes in the population
+    std::vector<T> get_genes(bool keep_duplicats);                  //returns the current genes in the population
     int get_generation();                                           //returns the number of generation that have been executed
     void set_genes(std::vector<T> new_genes);                       //sets the genes in the population to new_genes
     std::string to_string();                                        //returns a string representation of the population
-    //returns a string representation of the best genes in the population, evaluate = nullptr will use the evaluate function of the population, otherwise it will use the given evaluate function
+    //returns a string representation of the best genes in the population, using the given evaluate function
     std::string bests_to_string(std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                     
     
     // setters of the operator functions
@@ -115,7 +115,10 @@ std::vector<T> Population<T, L>::get_bests(bool keep_duplicats, std::function<st
 }
 
 template <typename T, typename L>
-std::vector<T> Population<T, L>::get_genes(){
+std::vector<T> Population<T, L>::get_genes(bool keep_duplicats){
+    if(keep_duplicats) return genes;
+    std::sort(genes.begin(), genes.end());
+    genes.erase(std::unique(genes.begin(), genes.end()), genes.end());
     return genes;
 }
 

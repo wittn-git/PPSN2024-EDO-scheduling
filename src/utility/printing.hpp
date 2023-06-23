@@ -13,8 +13,12 @@ void print(
 ){
     std::cout << algorithm_name << "\n";
     std::cout << "Generations: " << population.get_generation() << "\n";
-    std::cout << "Individuals: " << population.get_genes().size() << "\n";
-    std::cout << "Diversity_score: " << 1/diversity_value(population.get_genes()) << "\n";
-    std::cout << "Best Individuals: " << "\n";
-    std::cout << population.bests_to_string(evaluate) << "\n";
+    std::cout << "Individuals: " << population.get_genes(true).size() << "\n";
+    std::cout << "Diversity score: " << diversity_value(population.get_genes(true)) << "\n";
+    std::cout << "Unique individuals: " << population.get_genes(false).size() << "\n";
+    std::vector<T> bests = population.get_bests(false, evaluate);
+    std::vector<L> fitnesses__bests = evaluate(bests);
+    std::cout << "Best fitness: " << fitnesses__bests[0] << "\n";
+    std::cout << "Number of unique best individuals: " << bests.size() << "\n";
+    std::cout << "\n";
 }

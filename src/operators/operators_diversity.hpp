@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <vector>
+#include <iostream>
 #include <functional>
 
 using T = std::vector<std::vector<int>>;
@@ -37,16 +38,15 @@ std::function<double(const std::vector<T>&)> diversity_vector(std::function<doub
         std::vector<double> diversity_scores;
         for(int i = 0; i < genes.size(); i++){
             for(int j = i + 1; j < genes.size(); j++){
-                if(i == j) continue;
                 diversity_scores.emplace_back(diversity_measure(genes[i], genes[j]));
             }
         }
-        return 1/std::accumulate(diversity_scores.begin(), diversity_scores.end(), 0.0);
+        return -(std::accumulate(diversity_scores.begin(), diversity_scores.end(), 0.0) / diversity_scores.size());
     };
 }
 
 std::function<double(const std::vector<double>&)> diversity_vector(){
     return [](const std::vector<double>& diversity_scores) -> double {
-        return 1/std::accumulate(diversity_scores.begin(), diversity_scores.end(), 0.0);
+        return -(std::accumulate(diversity_scores.begin(), diversity_scores.end(), 0.0) / diversity_scores.size());
     };
 }

@@ -31,7 +31,7 @@ int bound_change(
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
     int remaining_solutions_n
 ){
-    std::vector<T> genes = population.get_genes();
+    std::vector<T> genes = population.get_genes(true);
     std::vector<L> fitnesses = evaluate(genes);
     std::vector<int> indices(genes.size());
     std::iota(indices.begin(), indices.end(), 0);
@@ -58,9 +58,9 @@ void diversity_optimization(
     population.set_selectParents(select_parents_div);
     population.set_selectSurvivors(select_survivors_div);
     while(i < div_generations_con){
-        std::vector<T> old_genes = population.get_genes();
+        std::vector<T> old_genes = population.get_genes(true);
         population.execute(bound_value);
-        std::vector<T> new_genes = population.get_genes();
+        std::vector<T> new_genes = population.get_genes(true);
         if(diversity_value(old_genes) > diversity_value(new_genes)){
             population.set_genes(old_genes);
             i++;
@@ -92,7 +92,7 @@ Population<T,L> noah(
         objective_optimization(population, obj_generations_n, bound_value, select_parents_obj, select_survivors_obj);
         bound_value = bound_change(population, evaluate, remaining_solutions_n);
         diversity_optimization(population, bound_value, div_generations_con, select_parents_div, select_survivors_div, diversity_value);
-    } 
+    }
     return population;
 }
 

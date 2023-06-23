@@ -4,9 +4,11 @@
 #include "utility/printing.hpp"
 #include "utility/generating.hpp"
 
+using T = std::vector<std::vector<int>>;
+
 int main() {
 
-    int m = 1;
+    int m = 5;
     int n = 50;
     int max_processing_time = 50;
     int seed = 0;
@@ -22,20 +24,21 @@ int main() {
     Population<T,L> simple_pop = simple_test(
         seed, m, processing_times, release_dates, due_dates,
         evaluate, 
-        100, 100
+        100, 100, 3, 0.1
     );
+
+    double best = evaluate(simple_pop.get_bests(false, evaluate))[0];
 
     Population<T,L> noah_pop = noah_test(
         seed, m, processing_times, release_dates, due_dates,
         evaluate, diversity_measure,
-        50, 60, 5, 25, 3, 100, 0.1, 3
+        50, best, 5, 25, 7, 100, 0.1, 3
     );
 
-    double best = evaluate(simple_pop.get_bests(false, evaluate))[0];
     Population<T,L>  mu1_pop = mu1_test(
         seed, m, processing_times, release_dates, due_dates,
         evaluate, diversity_measure,
-        50, 0.2, -45, 0.1, 100
+        50, 1, best, 0.1, 25
     );
 
     print(simple_pop, evaluate, diversity_value, "Simple");

@@ -4,6 +4,7 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <iostream>
 
 using T = std::vector<std::vector<int>>;
 using L = double;
@@ -41,6 +42,7 @@ std::function<std::vector<T>(std::mt19937&)> initialize_quality(int population_s
         std::vector<T> genes(population_size);
         std::uniform_int_distribution< int > distribute_machines(0, machines_n-1);
         std::transform(genes.begin(), genes.end(), genes.begin(), [population_size, jobs_n, machines_n, &generator, distribute_machines, OPT, alpha, evaluate](T& gene) mutable -> T {
+            int j = 0;
             do {
                 gene = std::vector<std::vector<int>>(machines_n);
                 for(int i = 0; i < jobs_n; i++){
@@ -49,7 +51,8 @@ std::function<std::vector<T>(std::mt19937&)> initialize_quality(int population_s
                 for(auto& schedule : gene){
                     std::shuffle(schedule.begin(), schedule.end(), generator);
                 }
-            }while(evaluate({gene})[0] < (1+alpha) * OPT);       
+                j++;
+            } while(evaluate({gene})[0] < (1+alpha) * OPT);      
             return gene;
         });
         return genes;
