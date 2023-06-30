@@ -42,11 +42,13 @@ Population<T,L> mu1_test(
     double alpha,
     double OPT,
     double mutation_rate,
-    int termination_generations
+    int termination_generations,
+    std::vector<T> initial_population
 ){
 
     std::function<bool(Population<T,L>&)> termination_criterion = terminate_generations(termination_generations);
-    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_quality(population_size, processing_times.size(), m, OPT, alpha, evaluate);
+    //std::function<std::vector<T>(std::mt19937&)> initialize = initialize_quality(population_size, processing_times.size(), m, OPT, alpha, evaluate);
+    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_fix(initial_population);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_qdiv(alpha, OPT, diversity_measure, evaluate);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents =  select_random(1);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);

@@ -48,7 +48,7 @@ public:
     std::vector<T> get_genes(bool keep_duplicats);                  //returns the current genes in the population
     int get_generation();                                           //returns the number of generation that have been executed
     void set_genes(std::vector<T> new_genes);                       //sets the genes in the population to new_genes
-    std::string to_string();                                        //returns a string representation of the population
+    std::string to_string(bool keep_duplicates);                         //returns a string representation of the population
     //returns a string representation of the best genes in the population, using the given evaluate function
     std::string bests_to_string(std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                     
     
@@ -133,9 +133,9 @@ void Population<T, L>::set_genes(std::vector<T> new_genes){
 }
 
 template <typename T, typename L>
-std::string Population<T, L>::to_string(){
+std::string Population<T, L>::to_string(bool keep_duplicates){
     std::string s;
-    for (auto gene : genes) {
+    for (auto gene : get_genes(keep_duplicates)) {
         int machine = 1;
         for (auto chromosome : gene) {
             s += std::to_string(machine) + ": ";

@@ -8,10 +8,32 @@ using T = std::vector<std::vector<int>>;
 
 int main() {
 
-    int m = 5;
-    int n = 50;
+    /*std::function<double(const T&, const T&)> diversity_measure = diversity_DFM();
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_div(diversity_measure);
+    std::mt19937 rng(945845);
+    std::vector<T> parents = {
+        {{1,2,3}},
+        {{1,2,3}}
+    };
+    std::vector<T> children = {
+        {{3,2,1}}
+    };
+
+    std::vector<T> surv = select_survivors(parents, {{}}, children, rng);
+    for(auto& s : surv){
+        for(auto& j : s){
+            for(auto& t : j){
+                std::cout << t << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }*/
+
+    int m = 2;
+    int n = 15;
     int max_processing_time = 50;
-    int seed = 0;
+    int seed = 945845;
 
     std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
     std::vector<int> release_dates = get_release_dates(seed, n, processing_times);
@@ -24,7 +46,7 @@ int main() {
     Population<T,L> simple_pop = simple_test(
         seed, m, processing_times, release_dates, due_dates,
         evaluate, 
-        100, 100, 3, 0.1
+        10, 100, 3, 0.1
     );
 
     double best = evaluate(simple_pop.get_bests(false, evaluate))[0];
@@ -32,13 +54,13 @@ int main() {
     Population<T,L> noah_pop = noah_test(
         seed, m, processing_times, release_dates, due_dates,
         evaluate, diversity_measure,
-        50, best, 5, 25, 7, 100, 0.1, 3
+        50, best, 3, 25, 10, 25, 0.1, 3
     );
 
     Population<T,L>  mu1_pop = mu1_test(
         seed, m, processing_times, release_dates, due_dates,
         evaluate, diversity_measure,
-        50, 1, best, 0.1, 25
+        50, 0, best, 1, 50, simple_pop.get_genes(true)
     );
 
     print(simple_pop, evaluate, diversity_value, "Simple");

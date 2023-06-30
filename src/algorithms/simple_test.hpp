@@ -29,7 +29,7 @@ Population<T,L> simple_test(
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents = select_tournament(tournament_size, population_size);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine = nullptr;
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_mu(10, evaluate);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_mu(population_size, evaluate);
 
     Population population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors);
     population.execute_multiple(generations, std::numeric_limits<int>::max());

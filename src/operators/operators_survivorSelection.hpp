@@ -71,7 +71,7 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
             }
             diversity_values.emplace_back(div_value(div_vector));
         }
-        auto min_it = std::max_element(indices.begin(), indices.end(), [&](int a, int b) {
+        auto min_it = std::min_element(indices.begin(), indices.end(), [&](int a, int b) {
             return diversity_values[a] < diversity_values[b];
         });
         selected_genes.erase(selected_genes.begin() + *min_it);
@@ -93,6 +93,6 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         assert(offspring.size() == 1);
         if(evaluate(offspring)[0] < OPT * (1 + alpha)) return parents;
         std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> div = select_div(diversity_measure);
-        return div(parents, fitnesses_parents, offspring, generator);
+        return div(parents, {}, offspring, generator);
     };
 };
