@@ -32,8 +32,6 @@ std::vector<int> get_release_dates(int seed, int n, std::vector<int> processing_
     return release_dates;
 }
 
-
-// Returns a vector of n due dates sampled from a normal distribution with mu and sigma based on the processing time and release date, lower bound being the release date + processing time
 std::vector<int> get_due_dates(int seed, int n, std::vector<int> processing_times, std::vector<int> release_dates){
     std::vector<int> due_dates(n);
     std::mt19937 generator(seed);
