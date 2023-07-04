@@ -19,13 +19,15 @@ Population<T,L> mu1(
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents,
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate,
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine
 ){
     std::function<std::vector<L>(const std::vector<T>&)> evaluate_nullptr = nullptr;
     Population<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors);
+    std::function<double(const T&, const T&)> diversity_measure = diversity_DFM();
+    std::function<double(const std::vector<T>&)> diversity_value = diversity_vector(diversity_measure);
     while(!termination_criterion(population)){
-        population.execute(0);
+        population.execute();
     }
     return population;
 }
@@ -37,22 +39,20 @@ Population<T,L> mu1_test(
     std::vector<int> release_dates, 
     std::vector<int> due_dates,
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
+    std::function<bool(Population<T,L>&)> termination_criterion,
     std::function<double(const T&, const T&)> diversity_measure,
     int population_size,
     double alpha,
     double OPT,
-    double mutation_rate,
-    int termination_generations,
     std::vector<T> initial_population
 ){
 
-    std::function<bool(Population<T,L>&)> termination_criterion = terminate_generations(termination_generations);
-    //std::function<std::vector<T>(std::mt19937&)> initialize = initialize_quality(population_size, processing_times.size(), m, OPT, alpha, evaluate);
-    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_fix(initial_population);
+    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_quality(population_size, processing_times.size(), m, OPT, alpha, evaluate);
+    //std::function<std::vector<T>(std::mt19937&)> initialize = initialize_fix(initial_population);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_qdiv(alpha, OPT, diversity_measure, evaluate);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents =  select_random(1);
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine = nullptr;
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
 
     return mu1(
         seed,

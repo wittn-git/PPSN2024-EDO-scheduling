@@ -22,9 +22,9 @@ private:
     // Function taking a vector of genes of type T and returning a vector of parents of type T
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents;
     // Function taking a vector of genes of type T and returning a vector of mutated genes of type T
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& mutate;
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate;
     // Function taking a vector of genes of type T and returning a vector of recombined genes of type T
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& recombine;
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine;
     // Function taking two vectors of genes of type T (parents and children) and returning a selected vector of genes of type T
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors;
 
@@ -36,17 +36,18 @@ public:
         std::function<std::vector<T>(std::mt19937&)>& initialize,
         std::function<std::vector<L>(const std::vector<T>&)>& evaluate,
         std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents,
-        std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& mutate,
-        std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& recombine,
+        std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate,
+        std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine,
         std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
     );
 
-    void execute(double quality_bound);                             //executes one iteration of the evolutionary algorithm
-    void execute_multiple(int generations, double quality_bound);   //executes 'generations' iterations of the evolutionary algorithm
+    void execute();                                                 //executes one iteration of the evolutionary algorithm
+    void execute_multiple(int generations);                         //executes 'generations' iterations of the evolutionary algorithm
     //returns the best genes in the population, using the given evaluate function
     std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                  
     std::vector<T> get_genes(bool keep_duplicats);                  //returns the current genes in the population
     int get_generation();                                           //returns the number of generation that have been executed
+    int get_size(bool keep_duplicates);                                                 //returns the size of the population
     void set_genes(std::vector<T> new_genes);                       //sets the genes in the population to new_genes
     std::string to_string(bool keep_duplicates);                         //returns a string representation of the population
     //returns a string representation of the best genes in the population, using the given evaluate function
@@ -69,8 +70,8 @@ Population<T, L>::Population(
     std::function<std::vector<T>(std::mt19937&)>& initialize,
     std::function<std::vector<L>(const std::vector<T>&)>& evaluate,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents,
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& mutate,
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& recombine,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
 ) : generation(0), generator(seed), evaluate(evaluate), selectParents(selectParents), mutate(mutate), recombine(recombine), selectSurvivors(selectSurvivors) {
     assert(initialize != nullptr && "initialize function must be set");
@@ -79,20 +80,20 @@ Population<T, L>::Population(
 }
 
 template <typename T, typename L>
-void Population<T, L>::execute(double quality_bound) {
+void Population<T, L>::execute() {
     generation++;
     std::vector<L> fitnesses = (evaluate == nullptr) ? std::vector<L>(0) : evaluate(genes);
     assert(evaluate == nullptr || fitnesses.size() == genes.size());
     std::vector<T> parents = (selectParents == nullptr) ? genes : selectParents(genes, fitnesses, generator);
-    std::vector<T> children = (recombine == nullptr) ? parents : recombine(parents, quality_bound, generator);
-    children = (mutate == nullptr) ? children : mutate(children, quality_bound, generator);
+    std::vector<T> children = (recombine == nullptr) ? parents : recombine(parents, generator);
+    children = (mutate == nullptr) ? children : mutate(children, generator);
     genes = (selectSurvivors == nullptr) ? children : selectSurvivors(genes, fitnesses, children, generator);
 }
 
 template <typename T, typename L>
-void Population<T, L>::execute_multiple(int generations, double quality_bound){
+void Population<T, L>::execute_multiple(int generations){
     for(int i = 0; i < generations; i++){
-        execute(quality_bound);
+        execute();
     }
 }
 
@@ -125,6 +126,11 @@ std::vector<T> Population<T, L>::get_genes(bool keep_duplicats){
 template <typename T, typename L>
 int Population<T, L>::get_generation(){
     return generation;
+}
+
+template <typename T, typename L>
+int Population<T, L>::get_size(bool keep_duplicates){
+    return get_genes(keep_duplicates).size();
 }
 
 template <typename T, typename L>

@@ -10,6 +10,14 @@
 using T = std::vector<std::vector<int>>;
 using L = double;
 
+// Utility ---------------------------------------------------------------------------
+
+double euclideanNorm(const std::vector<double>& vec) {
+    double sumOfSquares = 0.0;
+    for (int num : vec) sumOfSquares += num * num;
+    return std::sqrt(sumOfSquares);
+}
+
 // Diversity measure operators (gene level) ------------------------------------------
 
 std::function<double(const T& , const T&)> diversity_DFM(){
@@ -41,12 +49,12 @@ std::function<double(const std::vector<T>&)> diversity_vector(std::function<doub
                 diversity_scores.emplace_back(diversity_measure(genes[i], genes[j]));
             }
         }
-        return -(std::accumulate(diversity_scores.begin(), diversity_scores.end(), 0.0) / diversity_scores.size());
+        return -euclideanNorm(diversity_scores);
     };
 }
 
 std::function<double(const std::vector<double>&)> diversity_vector(){
     return [](const std::vector<double>& diversity_scores) -> double {
-        return -(std::accumulate(diversity_scores.begin(), diversity_scores.end(), 0.0) / diversity_scores.size());
+        return -euclideanNorm(diversity_scores);
     };
 }

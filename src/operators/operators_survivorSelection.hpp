@@ -60,7 +60,7 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         }
         std::vector<int> indices(selected_genes.size());
         std::iota(indices.begin(), indices.end(), 0);
-        std::vector<double> diversity_values(selected_genes.size());
+        std::vector<double> diversity_values;
         std::function<double(const std::vector<double>&)> div_value = diversity_vector();
         for(auto index_it = indices.begin(); index_it != indices.end(); ++index_it){
             std::vector<double> div_vector;
@@ -71,10 +71,10 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
             }
             diversity_values.emplace_back(div_value(div_vector));
         }
-        auto min_it = std::min_element(indices.begin(), indices.end(), [&](int a, int b) {
+        auto max_it = std::max_element(indices.begin(), indices.end(), [&](int a, int b) {
             return diversity_values[a] < diversity_values[b];
         });
-        selected_genes.erase(selected_genes.begin() + *min_it);
+        selected_genes.erase(selected_genes.begin() + *max_it);
         return selected_genes;
     };
 };
@@ -94,5 +94,40 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         if(evaluate(offspring)[0] < OPT * (1 + alpha)) return parents;
         std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> div = select_div(diversity_measure);
         return div(parents, {}, offspring, generator);
+    };
+};
+
+/*
+    quality-Selection: Selects the mu(=parent_size) individuals with a fitness value of at least quality_bound
+    Arguments:
+        - quality_bound:    fitness value threshold
+        - evaluate:         function taking a vector of genes and returning a vector of fitnesses
+*/
+std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_quality(double quality_bound, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
+    return [quality_bound, evaluate](const std::vector<T>& parents, const std::vector<L>& fitnesses_parents, const std::vector<T>& offspring, std::mt19937& generator) -> std::vector<T> {
+        int mu = parents.size();
+        std::vector<T> combined = parents;
+        std::vector<L> fitnesses = fitnesses_parents;
+        combined.insert(combined.end(), offspring.begin(), offspring.end());
+        std::vector<L> fitnesses_offspring = evaluate(offspring);
+        fitnesses.insert(fitnesses.end(), fitnesses_offspring.begin(), fitnesses_offspring.end());
+        for(int i = 0; i < fitnesses.size(); i++){
+            if(fitnesses[i] < quality_bound){
+                combined.erase(combined.begin() + i);
+                fitnesses.erase(fitnesses.begin() + i);
+                i--;
+            }
+        }
+        if(combined.size() <= mu) return combined;
+        std::vector<T> selected_genes(mu);
+        std::vector<int> indices(mu);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::partial_sort(indices.begin(), indices.begin() + parents.size(), indices.end(), [&](int a, int b) {
+            return fitnesses[a] > fitnesses[b];
+        });
+        for (int i = 0; i < mu; i++) {
+            selected_genes[i] = combined[indices[i]];
+        }
+        return selected_genes;
     };
 };

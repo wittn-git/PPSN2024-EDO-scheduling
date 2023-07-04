@@ -19,19 +19,18 @@ Population<T,L> simple_test(
     std::vector<int> release_dates, 
     std::vector<int> due_dates, 
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
     int population_size, 
     int generations,
-    int tournament_size,
-    double mutation_rate
+    int tournament_size
 ){
 
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(population_size, processing_times.size(), m);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents = select_tournament(tournament_size, population_size);
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine = nullptr;
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_mu(population_size, evaluate);
 
     Population population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors);
-    population.execute_multiple(generations, std::numeric_limits<int>::max());
+    population.execute_multiple(generations);
     return population;
 }

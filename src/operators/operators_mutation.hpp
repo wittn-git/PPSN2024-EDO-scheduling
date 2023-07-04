@@ -15,8 +15,8 @@ using L = double;
         - mutation_rate:        overall probability of a mutation occurring
 */
 
-std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate_swap(double mutation_rate) {
-    return [mutation_rate](const std::vector<T>& genes, double quality_bound, std::mt19937& generator) -> std::vector<T> {
+std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_swap(double mutation_rate) {
+    return [mutation_rate](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
         std::vector<T> mutated_genes(genes.size());
         std::uniform_real_distribution< double > distribute_rate(0, 1);
         std::uniform_int_distribution< int > distribute_machine(0, genes[0].size() - 1 );
@@ -43,8 +43,8 @@ std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> muta
         - mutation_rate:        probability of a mutation occurring for each gene
 */
 
-std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate_removeinsert(double mutation_rate) {
-    return [mutation_rate](const std::vector<T>& genes, double quality_bound, std::mt19937& generator) -> std::vector<T> {
+std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_removeinsert(double mutation_rate) {
+    return [mutation_rate](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
         std::vector<T> mutated_genes(genes.size());
         std::uniform_real_distribution< double > distribute_rate(0, 1);
         std::uniform_int_distribution< int > distribute_machine(0, genes[0].size() - 1 );
@@ -73,8 +73,8 @@ std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> muta
         - mutation_rate:        probability of a mutation occurring for each gene
 */
 
-std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate_neighborswap(double mutation_rate) {
-    return [mutation_rate](const std::vector<T>& genes, double quality_bound, std::mt19937& generator) -> std::vector<T> {
+std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_neighborswap(double mutation_rate) {
+    return [mutation_rate](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
         std::vector<T> mutated_genes(genes.size());
         std::uniform_real_distribution< double > distribute_rate(0, 1);
         std::uniform_int_distribution< int > distribute_machine(0, genes[0].size() - 1 );
