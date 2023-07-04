@@ -103,6 +103,7 @@ Population<T,L> noah_test(
     std::vector<int> release_dates, 
     std::vector<int> due_dates,
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
+    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate,
     std::function<double(const T&, const T&)> diversity_measure,
     int population_size,
     int barrier_value,
@@ -121,7 +122,6 @@ Population<T,L> noah_test(
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div = select_div(diversity_measure);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj = select_tournament(tournament_size, population_size);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div = select_tournament(tournament_size, 1);
-    std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> mutate = mutate_swap(mutation_rate);
     std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)> recombine = nullptr;
 
     return noah(
