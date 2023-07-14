@@ -3,6 +3,7 @@
 #include "../algorithms/mu1.hpp"
 #include "../utility/printing.hpp"
 #include "../utility/generating.hpp"
+#include "../utility/documenting.hpp"
 
 #include <tuple>
 
@@ -80,7 +81,6 @@ std::tuple<int, double> test_2mu_runtime(int n, int m, int mu, int runs, std::fu
             success_count++;
         }        
         runtime += mu1_pop.get_generation();
-
     }
     return {success_count, runtime/runs};
 }
@@ -96,23 +96,28 @@ void test_2mu_nswap_runtime(std::vector<int> ns, int mu, int runs){
         std::tuple<int, int> result = test_2mu_runtime(n, 1, mu, runs, mutate_nswp, runtime_f);
         success_count += std::get<0>(result);
         std::cout << "For n = " << n << ", avg runtime " << std::get<1>(result) << " ; worst case " << runtime_f(n) << std::endl;
+        write_to_file("NSWAP,"+ std::to_string(n)+","+std::to_string(std::get<1>(result))+","+std::to_string(runtime_f(n)), "runtimes.txt");
     }
     std::cout << "Out of " << runs*ns.size() << " runs, " << success_count << " were successful (runtime check n-swap)" << std::endl;
     std::cout << "End of 2mu runtime test for n-swap" << std::endl;
+    write_to_file("NSWAP,"+ std::to_string(success_count)+","+std::to_string(runs*ns.size()), "success_rates.txt");
 }
 
 void test_2mu_rai_runtime(std::vector<int> ns, int mu, int runs){
     std::cout << "Testing 2mu runtime for r+i with mu = " << mu << std::endl;
     int success_count = 0;
     auto runtime_f = [](int n) {
-        return n * std::log(n);
+        return n * n * std::log(n);
     };
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_rai = mutate_removeinsert(1);
     for(int n : ns){
         std::tuple<int, int> result = test_2mu_runtime(n, 1, mu, runs, mutate_rai, runtime_f);
         success_count += std::get<0>(result);
         std::cout << "For n = " << n << ", avg runtime " << std::get<1>(result) << " ; worst case " << runtime_f(n) << std::endl;
+        write_to_file("RAI,"+ std::to_string(n)+","+std::to_string(std::get<1>(result))+","+std::to_string(runtime_f(n)), "runtimes.txt");
     }
+    
     std::cout << "Out of " << runs*ns.size() << " runs, " << success_count << " were successful (runtime check r+i)" << std::endl;
     std::cout << "End of 2mu runtime test for r+i" << std::endl;
+    write_to_file("RAI,"+ std::to_string(success_count)+","+std::to_string(runs*ns.size()), "success_rates.txt");
 }
