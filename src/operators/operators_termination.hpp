@@ -23,15 +23,17 @@ std::function<bool(Population<T,L>&)> terminate_generations(int max_generations)
 }
 
 /*
-    Diversity termination: Terminate when the diversity is higher than a certain threshold.
+    Diversity termination: Terminate when the diversity is higher / lower than a certain threshold.
     Args:
         threshold:          threshold for the diversity
+        higher:             whether to terminate when the diversity is higher or lower than the threshold
         diversity_measure:  diversity measure to use
 */
-std::function<bool(Population<T,L>&)> terminate_diversity(double threshold, std::function<double(const T&, const T&)> diversity_measure){
+std::function<bool(Population<T,L>&)> terminate_diversity(double threshold, bool higher, std::function<double(const T&, const T&)> diversity_measure){
     std::function<double(const std::vector<T>&)> div_vector = diversity_vector(diversity_measure);
-    return [div_vector, threshold](Population<T,L>& population) -> bool {
-        return div_vector(population.get_genes(true)) >= threshold;
+    return [div_vector, higher, threshold](Population<T,L>& population) -> bool {
+        if(div_vector(population.get_genes(true)) == threshold) return true;
+        return higher == (div_vector(population.get_genes(true)) > threshold);
     };
 }
 
