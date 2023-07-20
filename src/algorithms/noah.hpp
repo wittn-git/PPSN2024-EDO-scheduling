@@ -22,7 +22,7 @@ void objective_optimization(
 ){
     population.set_selectParents(select_parents_obj);
     population.set_selectSurvivors(select_survivors_obj);
-    population.execute_multiple(obj_generations_n);
+    population.execute(terminate_generations(obj_generations_n));
 }
 
 int bound_change(
@@ -59,7 +59,7 @@ void diversity_optimization(
         std::vector<T> old_genes = population.get_genes(true);
         population.execute();
         std::vector<T> new_genes = population.get_genes(true);
-        if(diversity_value(old_genes) > diversity_value(new_genes)){
+        if(diversity_value(old_genes) >= diversity_value(new_genes)){
             population.set_genes(old_genes);
             i++;
         }
@@ -68,73 +68,34 @@ void diversity_optimization(
 
 Population<T,L> noah(
     int seed,
+    int m,
+    int n,
+    int mu,
+    std::function<bool(Population<T,L>&)> termination_criterion,
+    std::function<std::vector<L>(const std::vector<T>&)> evaluate,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj,
+    std::function<double(const T&, const T&)> diversity_measure,
     int barrier_value,
     int obj_generations_n,
     int remaining_solutions_n,
-    int div_generations_con,
-    int initial_population_size,
-    std::function<bool(Population<T,L>&)> termination_criterion,
-    std::function<std::vector<T>(std::mt19937&)> initialize,
-    std::function<std::vector<L>(const std::vector<T>&)> evaluate,
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj,
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div,
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine,
-    std::function<double(const T&, const T&)> diversity_measure
+    int div_generations_con
 ){
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj = select_mu(initial_population_size, evaluate);
+
+    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(mu, n, m);
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div = select_random(1);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj = select_mu(mu, evaluate);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div = select_div(diversity_measure);
     std::function<double(const std::vector<T>&)> diversity_value = diversity_vector(diversity_measure);
 
     Population population(seed, initialize, evaluate, select_parents_obj, mutate, recombine, select_survivors_obj);
-    double bound_value = std::numeric_limits<double>::max();
-    int iteration = 0;
+    double bound_value = -std::numeric_limits<double>::max();
     
-    while( bound_value > barrier_value && !termination_criterion(population) ){
+    while( bound_value < barrier_value && !termination_criterion(population) ){
         objective_optimization(population, obj_generations_n, select_parents_obj, select_survivors_obj);
         bound_value = bound_change(population, evaluate, remaining_solutions_n);
         diversity_optimization(population, div_generations_con, select_parents_div, select_survivors_div, diversity_value);
     }
     return population;
-}
-
-Population<T,L> noah_test(
-    int seed,
-    int m,
-    std::vector<int> processing_times, 
-    std::vector<int> release_dates, 
-    std::vector<int> due_dates,
-    std::function<std::vector<L>(const std::vector<T>&)> evaluate,
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
-    std::function<bool(Population<T,L>&)> termination_criterion,
-    std::function<double(const T&, const T&)> diversity_measure,
-    int population_size,
-    int barrier_value,
-    int obj_generations_n,
-    int remaining_solutions_n,
-    int div_generations_con,
-    int tournament_size
-){
-
-    std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(population_size, processing_times.size(), m);
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj = select_tournament(tournament_size, population_size);
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div = select_tournament(tournament_size, 1);
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
-
-    return noah(
-        seed,
-        barrier_value,
-        obj_generations_n,
-        remaining_solutions_n,
-        div_generations_con,
-        population_size,
-        termination_criterion,
-        initialize,
-        evaluate,
-        select_parents_obj,
-        select_parents_div,
-        mutate,
-        recombine,
-        diversity_measure
-    );
 }
