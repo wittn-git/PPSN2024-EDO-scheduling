@@ -15,32 +15,20 @@ std::vector<int> get_processing_times(int seed, int n, int max){
     return processing_times;
 }
 
-// Returns a vector of n/2 zeros and n/2 values sampled exponentially between 0 and the sum of the processing times
-std::vector<int> get_release_dates(int seed, int n, std::vector<int> processing_times){
-    std::mt19937 generator(seed);
-    std::vector<int> release_dates(n);
-    double lambda = 0.1;
-    std::exponential_distribution<double> dist(lambda);
-    int upperBound = std::accumulate(processing_times.begin(), processing_times.end(), 0);
-    std::transform(release_dates.begin() + n/2, release_dates.end(), release_dates.begin() + n/2, [&dist, &generator, upperBound](int&){
-        int result = dist(generator);
-        while (result > upperBound) {
-            result = dist(generator);
-        }
-        return result;
-    });
-    return release_dates;
+// Returns a vector of only zeros
+std::vector<int> get_release_dates(int n){
+    return std::vector<int>(n, 0);
 }
 
-std::vector<int> get_due_dates(int seed, int n, std::vector<int> processing_times, std::vector<int> release_dates){
-    std::vector<int> due_dates(n);
+std::vector<int> get_due_dates(int seed, std::vector<int> processing_times){
+    std::vector<int> due_dates(processing_times.size());
     std::mt19937 generator(seed);
     std::uniform_real_distribution<double> dist_factor(3, 10);
-    for(int i = 0; i < n; i++){
+    for(int i = 0; i < processing_times.size(); i++){
         double factor = dist_factor(generator);
-        double muh = release_dates[i] + factor * processing_times[i];
+        double muh = factor * processing_times[i];
         double sigma = (factor - 1) * processing_times[i] / 3;
-        int a = release_dates[i] + processing_times[i];
+        int a = processing_times[i];
         std::normal_distribution<double> dist(muh, sigma);
         int result = dist(generator);
         while (result < a) {

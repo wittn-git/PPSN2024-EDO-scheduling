@@ -13,8 +13,8 @@ using L = double;
 void test_base(int n, int m, int mu, int seed, int max_processing_time){
 
     std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
-    std::vector<int> release_dates = get_release_dates(seed, n, processing_times);
-    std::vector<int> due_dates = get_due_dates(seed, n, processing_times, release_dates);
+    std::vector<int> release_dates = get_release_dates(n);
+    std::vector<int> due_dates = get_due_dates(seed, processing_times);
 
     std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
     std::function<double(const T&, const T&)> diversity_measure = diversity_DFM();
@@ -71,8 +71,8 @@ void test_2mu_runtime(std::string operator_name, std::vector<int> ns, int m, int
             int seed = i;
 
             std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
-            std::vector<int> release_dates = get_release_dates(seed, n, processing_times);
-            std::vector<int> due_dates = get_due_dates(seed, n, processing_times, release_dates);
+            std::vector<int> release_dates = get_release_dates(n);
+            std::vector<int> due_dates = get_due_dates(seed, processing_times);
 
             std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
 
