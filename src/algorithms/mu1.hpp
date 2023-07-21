@@ -25,7 +25,7 @@ Population<T,L> mu1_unconstrained(
 
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(mu, n, m);
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents =  select_random(1);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents = select_random(1);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_div(diversity_measure);
 
     Population<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors);

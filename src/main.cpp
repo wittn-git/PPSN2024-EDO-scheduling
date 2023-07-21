@@ -1,4 +1,5 @@
 #include "utility/testing.hpp"
+#include "utility/solvers.hpp"
 
 using T = std::vector<std::vector<int>>;
 
@@ -15,9 +16,10 @@ void test_mutation_runtimes(){
 }
 
 void test_algorithms_basic(){
-    test_base(15, 2, 15, 0, 50);
+    test_base(15, 2, 10, 0, 50);
 }
 
-int main() {
+int main(){
     test_algorithms_basic();
+    return 0;
 }

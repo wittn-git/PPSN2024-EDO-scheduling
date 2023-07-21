@@ -1,3 +1,5 @@
+#pragma once
+
 #include <random>
 #include <vector>
 #include <algorithm>
@@ -16,8 +18,8 @@ std::vector<int> get_processing_times(int seed, int n, int max){
 }
 
 // Returns a vector of only zeros
-std::vector<int> get_release_dates(int n){
-    return std::vector<int>(n, 0);
+std::vector<int> get_release_dates(int seed, std::vector<int> processing_times){
+    return std::vector<int>(processing_times.size(), 0);
 }
 
 std::vector<int> get_due_dates(int seed, std::vector<int> processing_times){

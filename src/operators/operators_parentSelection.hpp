@@ -20,14 +20,23 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::
     return [parent_count](const std::vector<T>& genes, const std::vector<L>& fitnesses, std::mt19937& generator) -> std::vector<T> {
         std::vector<T> selected_genes(parent_count);
         double total_fitness = std::accumulate(fitnesses.begin(), fitnesses.end(), 0.0);
+        if(total_fitness == 0){
+            std::uniform_int_distribution< int > distribute_point(0, genes.size() - 1 );
+            std::transform(selected_genes.begin(), selected_genes.end(), selected_genes.begin(), [&](T& selected_gene) mutable -> T {
+                int rand_index = distribute_point(generator);
+                return genes[rand_index];
+            });
+            return selected_genes;
+        }
         std::vector<double> probabilities(parent_count);
         std::transform(fitnesses.begin(), fitnesses.end(), probabilities.begin(), [&](double fitness) {
             return fitness / total_fitness;
         });
         std::partial_sum(probabilities.begin(), probabilities.end(), probabilities.begin());
-        std::uniform_real_distribution< double > distribute_rate(0, 1);
+        std::uniform_real_distribution< double > distribute_value(0, 1);
         std::transform(selected_genes.begin(), selected_genes.end(), selected_genes.begin(), [&](T& selected_gene) mutable -> T {
-            auto it = std::upper_bound(probabilities.begin(), probabilities.end(), distribute_rate(generator));
+            double rand_value = distribute_value(generator);
+            auto it = std::upper_bound(probabilities.begin(), probabilities.end(), rand_value);
             int index = std::distance(probabilities.begin(), it);
             return genes[index];
         });

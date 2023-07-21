@@ -61,7 +61,12 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         std::vector<int> indices(selected_genes.size());
         std::iota(indices.begin(), indices.end(), 0);
         std::vector<double> diversity_values;
-        std::function<double(const std::vector<double>&)> div_value = diversity_vector();
+        int n = std::accumulate(selected_genes[0].begin(), selected_genes[0].end(), 0, [](int sum, const std::vector<int>& machine) -> int {
+            return sum + machine.size();
+        });
+        int m = selected_genes[0].size();
+        int mu = parents.size();
+        std::function<double(const std::vector<double>&)> div_value = diversity_vector(n, m, mu);
         for(auto index_it = indices.begin(); index_it != indices.end(); ++index_it){
             std::vector<double> div_vector;
             for(auto score_it = diversity_scores.begin(); score_it != diversity_scores.end(); ++score_it){

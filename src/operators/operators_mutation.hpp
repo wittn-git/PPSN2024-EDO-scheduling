@@ -23,13 +23,16 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_remov
         std::transform(genes.begin(), genes.end(), mutated_genes.begin(), [mutation_rate, &generator, distribute_rate, distribute_machine](const T& gene) mutable -> T {
             T mutated_gene(gene);
             if(distribute_rate(generator) < mutation_rate){
-                int machine_remove = distribute_machine(generator);
-                std::uniform_int_distribution< int > distribute_job_remove(0, gene[machine_remove].size() - 1 );
+                int machine_remove;
+                do{
+                    machine_remove = distribute_machine(generator);
+                }while(mutated_gene[machine_remove].size() < 1);
+                std::uniform_int_distribution< int > distribute_job_remove(0, mutated_gene[machine_remove].size() - 1);
                 int job_remove = distribute_job_remove(generator);
                 int job = mutated_gene[machine_remove][job_remove];
                 mutated_gene[machine_remove].erase(mutated_gene[machine_remove].begin() + job_remove);
                 int machine_insert = distribute_machine(generator);
-                std::uniform_int_distribution< int > distribute_job_insert(0, gene[machine_insert].size() - 1 );
+                std::uniform_int_distribution< int > distribute_job_insert(0, mutated_gene[machine_insert].size());
                 int job_insert = distribute_job_insert(generator);
                 mutated_gene[machine_insert].insert(mutated_gene[machine_insert].begin() + job_insert, job);
             }

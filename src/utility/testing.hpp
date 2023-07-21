@@ -1,11 +1,12 @@
+#pragma once
+
 #include "../algorithms/simple.hpp"
 #include "../algorithms/noah.hpp"
 #include "../algorithms/mu1.hpp"
 #include "../utility/printing.hpp"
 #include "../utility/generating.hpp"
 #include "../utility/documenting.hpp"
-
-#include <tuple>
+#include "../utility/solvers.hpp"
 
 using T = std::vector<std::vector<int>>;
 using L = double;
@@ -13,7 +14,7 @@ using L = double;
 void test_base(int n, int m, int mu, int seed, int max_processing_time){
 
     std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
-    std::vector<int> release_dates = get_release_dates(n);
+    std::vector<int> release_dates = get_release_dates(seed, processing_times);
     std::vector<int> due_dates = get_due_dates(seed, processing_times);
 
     std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
@@ -22,7 +23,7 @@ void test_base(int n, int m, int mu, int seed, int max_processing_time){
 
     Population<T,L> simple_pop = simple_test(
         seed,
-        initialize_random(mu, processing_times.size(), m), evaluate, mutate_removeinsert(0.1), select_tournament(3, mu), select_mu(mu, evaluate),
+        initialize_random(mu, processing_times.size(), m), evaluate, mutate_removeinsert(0.1), select_roulette(mu), select_mu(mu, evaluate),
         300
     );
 
@@ -30,19 +31,19 @@ void test_base(int n, int m, int mu, int seed, int max_processing_time){
 
     Population<T,L> noah_pop = noah(
         seed, m, n, mu, 
-        terminate_generations(500), evaluate, mutate_removeinsert(0.1), select_tournament(3, mu), diversity_measure,
+        terminate_generations(500), evaluate, mutate_removeinsert(0.1), select_roulette(mu), diversity_measure,
         0, 8, 15, 3
     );
 
     Population<T,L>  mu1_const_pop = mu1_constrained(
         seed, m, n, mu,
-        terminate_generations(300), evaluate, mutate_removeinsert(1), diversity_measure,
-        1, best
+        terminate_generations(2500), evaluate, mutate_removeinsert(1), diversity_measure,
+        0, best
     );
 
     Population<T,L>  mu1_unconst_pop = mu1_unconstrained(
         seed, m, n, mu,
-        terminate_generations(50), evaluate, mutate_removeinsert(1), diversity_measure
+        terminate_generations(2500), evaluate, mutate_removeinsert(1), diversity_measure
     );
 
     print(simple_pop, evaluate, diversity_value, "Simple", n, m);
@@ -61,7 +62,7 @@ void test_2mu_runtime(std::string operator_name, std::vector<int> ns, int m, int
 
     int success_count = 0;
 
-    for(int n : ns){
+    for(int n : ns){        
 
         int runtime = 0;
         double expected = runtime_f(n);
@@ -71,7 +72,7 @@ void test_2mu_runtime(std::string operator_name, std::vector<int> ns, int m, int
             int seed = i;
 
             std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
-            std::vector<int> release_dates = get_release_dates(n);
+            std::vector<int> release_dates = get_release_dates(seed, processing_times);
             std::vector<int> due_dates = get_due_dates(seed, processing_times);
 
             std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
@@ -90,3 +91,28 @@ void test_2mu_runtime(std::string operator_name, std::vector<int> ns, int m, int
     }
     write_to_file(operator_name + "," + std::to_string(success_count) + "," + std::to_string(runs*ns.size()), "success_rates.txt");
 }
+
+
+/*void test_mu1_unconstrained_single(std::vector<int> mus, std::vector<int> ns, int runs){
+    std::function<double(const T&, const T&)> diversity_measure = diversity_DFM();
+    int max_processing_time = 50;
+    for(int n : ns){
+        for(int mu : mus){
+
+            if(mu > (n*n - n)/(n-1) ) continue;
+
+            int seed = n;
+            std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
+            std::vector<int> release_dates = get_release_dates(seed, processing_times);
+            std::vector<int> due_dates = get_due_dates(seed, processing_times);
+
+            std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
+            int OPT = evaluate({{moores_algorithm(processing_times, due_dates)}})[0];
+
+            /*Population<T,L>  mu1_unconst_pop = mu1_unconstrained(
+                seed, 1, n, mu,
+                terminate_diversitygenerations(), evaluate, mutate_removeinsert(1), diversity_measure
+            );
+        }
+    }
+}*/

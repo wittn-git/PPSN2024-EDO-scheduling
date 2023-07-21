@@ -1,5 +1,6 @@
 #include <limits>
 #include <numeric>
+#include <iostream>
 
 #include "../population/population.hpp"
 #include "../operators/operators_initialization.hpp"
@@ -34,7 +35,13 @@ int bound_change(
     std::vector<L> fitnesses = evaluate(genes);
     std::vector<int> indices(genes.size());
     std::iota(indices.begin(), indices.end(), 0);
-    std::partial_sort(indices.begin(), indices.begin() + remaining_solutions_n, indices.end(), [&](int a, int b) {
+
+    if(remaining_solutions_n > genes.size()){
+        population.set_genes(genes);
+        return *std::min_element(fitnesses.begin(), fitnesses.end());
+    }
+
+    std::partial_sort(indices.begin(), indices.begin() + remaining_solutions_n, indices.end(), [fitnesses](int a, int b) {
         return fitnesses[a] < fitnesses[b];
     });
     std::vector<T> new_genes(remaining_solutions_n);
