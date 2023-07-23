@@ -7,6 +7,7 @@
 #include <map>
 #include <tuple>
 #include <assert.h>
+
 #include "operators_diversity.hpp"
 
 using T = std::vector<std::vector<int>>;
@@ -52,26 +53,32 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         assert(offspring.size() == 1);
         std::vector<T> selected_genes = parents;
         selected_genes.emplace_back(offspring[0]);
-        std::map<std::tuple<int, int>, double> diversity_scores;
+        std::vector<std::tuple<int, int, double>> diversity_scores;
+        diversity_scores.reserve(selected_genes.size() * (selected_genes.size() - 1) / 2);
         for(int i = 0; i < selected_genes.size(); i++){
             for(int j = i + 1; j < selected_genes.size(); j++){
-                diversity_scores[{i,j}] = diversity_measure(selected_genes[i], selected_genes[j]);
+                diversity_scores.emplace_back(i, j, diversity_measure(selected_genes[i], selected_genes[j]));
             }
         }
         std::vector<int> indices(selected_genes.size());
         std::iota(indices.begin(), indices.end(), 0);
-        std::vector<double> diversity_values;
         int n = std::accumulate(selected_genes[0].begin(), selected_genes[0].end(), 0, [](int sum, const std::vector<int>& machine) -> int {
             return sum + machine.size();
         });
         int m = selected_genes[0].size();
         int mu = parents.size();
         std::function<double(const std::vector<double>&)> div_value = diversity_vector(n, m, mu);
-        for(auto index_it = indices.begin(); index_it != indices.end(); ++index_it){
+        std::vector<double> diversity_values;
+        diversity_values.reserve(indices.size());
+        for (const auto& index : indices) {
             std::vector<double> div_vector;
-            for(auto score_it = diversity_scores.begin(); score_it != diversity_scores.end(); ++score_it){
-                if(std::get<0>((*score_it).first) != *index_it && std::get<1>((*score_it).first) != *index_it){
-                    div_vector.emplace_back((*score_it).second);
+            div_vector.reserve(indices.size());
+            auto isIndexExcluded = [&index](const auto& score) {
+                return (std::get<0>(score) != index) && (std::get<1>(score) != index);
+            };
+            for (const auto& score : diversity_scores) {
+                if (isIndexExcluded(score)) {
+                    div_vector.push_back(std::get<2>(score));
                 }
             }
             diversity_values.emplace_back(div_value(div_vector));

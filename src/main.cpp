@@ -19,7 +19,14 @@ void test_algorithms_basic(){
     test_base(15, 2, 10, 0, 50);
 }
 
+void emperical_experiments(){
+    std::vector<int> ns = {3, 5, 10, 35, 50, 100, 200};
+    std::vector<int> mus = {2, 5, 10, 20, 50, 100};
+    int runs = 20;
+    test_mu1_unconstrained_single(mus, ns, runs);
+}
+
 int main(){
-    test_algorithms_basic();
+    emperical_experiments();
     return 0;
 }
