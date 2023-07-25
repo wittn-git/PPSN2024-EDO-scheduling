@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "../population/population.hpp"
+#include "../population/population_mu1.hpp"
 #include "../operators/operators_initialization.hpp"
 #include "../operators/operators_evaluation.hpp"
 #include "../operators/operators_parentSelection.hpp"
@@ -12,7 +13,7 @@
 using T = std::vector<std::vector<int>>;
 using L = double;
 
-Population<T,L> mu1_unconstrained(
+Population_Mu1<T,L> mu1_unconstrained(
     int seed, 
     int m, 
     int n, 
@@ -26,9 +27,10 @@ Population<T,L> mu1_unconstrained(
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(mu, n, m);
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents = select_random(1);
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_div(diversity_measure);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = nullptr;
+    std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> selectSurvivors_Div = select_pdiv(diversity_measure);
 
-    Population<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors);
+    Population_Mu1<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
     population.execute(termination_criterion);
     return population;
 }

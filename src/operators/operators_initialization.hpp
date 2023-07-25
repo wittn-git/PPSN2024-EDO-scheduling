@@ -4,7 +4,6 @@
 #include <vector>
 #include <random>
 #include <algorithm>
-#include <iostream>
 
 using T = std::vector<std::vector<int>>;
 using L = double;

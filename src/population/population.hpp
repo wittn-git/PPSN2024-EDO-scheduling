@@ -10,7 +10,7 @@
 template <typename T, typename L> // T: type of genes, L: type of fitness values
 class Population{
 
-private:
+protected:
 
     std::vector<T> genes;
     std::mt19937 generator;
@@ -43,7 +43,7 @@ public:
     );
 
     //executes one iteration of the evolutionary algorithm
-    void execute();   
+    virtual void execute();   
     //executes iterations of the evolutionary algorithm until the termination criterion is met                                              
     void execute(std::function<bool(Population<T,L>&)> termination_criterion);                         
     //returns the best genes in the population, using the given evaluate function

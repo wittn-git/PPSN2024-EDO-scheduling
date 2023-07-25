@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "utility/testing.hpp"
 #include "utility/solvers.hpp"
 
@@ -27,6 +29,5 @@ void emperical_experiments(){
 }
 
 int main(){
-    emperical_experiments();
     return 0;
 }

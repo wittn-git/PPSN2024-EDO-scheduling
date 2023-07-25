@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "operators_diversity.hpp"
+#include "../population/population_mu1.hpp"
 
 using T = std::vector<std::vector<int>>;
 using L = double;
@@ -143,3 +144,67 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         return selected_genes;
     };
 };
+
+/*
+    pdiv-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and one offspring, preserve diversity scores to improve runtime
+    Arguments
+        - diversity_measure:    function taking two genes and returning a double representing the diversity
+*/
+
+std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> select_pdiv(std::function<double(const T&, const T&)> diversity_measure) {
+    return [diversity_measure](const std::vector<T>& parents, const T& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
+        assert(offspring.size() == 1);
+        std::vector<T> selected_genes = parents;
+        selected_genes.emplace(selected_genes.begin() + diversity_preserver.index, offspring);
+
+        std::map<std::tuple<int, int>, double> diversity_scores;
+        if(diversity_preserver.first){
+            for(int i = 0; i < selected_genes.size(); i++){
+                for(int j = i + 1; j < selected_genes.size(); j++){
+                    diversity_scores[{i,j}] = diversity_measure(selected_genes[i], selected_genes[j]);
+                }
+            }
+        }else{
+            diversity_scores = diversity_preserver.diversity_scores;
+            for(int i = 0; i < selected_genes.size(); i++){
+                for(int j = i + 1; j < selected_genes.size(); j++){
+                    if(i == diversity_preserver.index || j == diversity_preserver.index){
+                        diversity_scores[{i,j}] = diversity_measure(selected_genes[i], selected_genes[j]);
+                    }
+                }
+            }
+        }
+        
+        std::vector<int> indices(selected_genes.size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        int n = std::accumulate(selected_genes[0].begin(), selected_genes[0].end(), 0, [](int sum, const std::vector<int>& machine) -> int {
+            return sum + machine.size();
+        });
+        int m = selected_genes[0].size();
+        int mu = parents.size();
+
+        std::function<double(const std::vector<double>&)> div_value = diversity_vector(n, m, mu);
+        std::vector<double> diversity_values;
+        diversity_values.reserve(indices.size());
+        for (const auto& index : indices) {
+            std::vector<double> div_vector;
+            div_vector.reserve(indices.size());
+            auto isIndexExcluded = [&index](const auto& entry) {
+                const auto& [firstIndex, secondIndex] = entry.first;
+                return (firstIndex != index) && (secondIndex != index);
+            };
+            for (const auto& entry : diversity_scores) {
+                if (isIndexExcluded(entry)) {
+                    div_vector.push_back(entry.second);
+                }
+            }
+            diversity_values.emplace_back(div_value(div_vector));
+        }
+        auto max_it = std::max_element(indices.begin(), indices.end(), [&](int a, int b) {
+            return diversity_values[a] < diversity_values[b];
+        });
+        selected_genes.erase(selected_genes.begin() + *max_it);
+        return { *max_it, false, diversity_scores, selected_genes };
+    };
+}

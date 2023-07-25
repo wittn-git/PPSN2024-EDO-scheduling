@@ -3,6 +3,7 @@
 #include <functional>
 #include <vector>
 #include <random>
+#include <iostream>
 
 using T = std::vector<std::vector<int>>;
 using L = double;
