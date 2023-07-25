@@ -177,6 +177,7 @@ std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Dive
         
         std::vector<int> indices(selected_genes.size());
         std::iota(indices.begin(), indices.end(), 0);
+        //std::shuffle(indices.begin(), indices.end(), generator);
 
         int n = std::accumulate(selected_genes[0].begin(), selected_genes[0].end(), 0, [](int sum, const std::vector<int>& machine) -> int {
             return sum + machine.size();
@@ -199,7 +200,7 @@ std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Dive
                     div_vector.push_back(entry.second);
                 }
             }
-            diversity_values.emplace_back(div_value(div_vector));
+            diversity_values[index] = div_value(div_vector);
         }
         auto max_it = std::max_element(indices.begin(), indices.end(), [&](int a, int b) {
             return diversity_values[a] < diversity_values[b];
