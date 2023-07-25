@@ -71,7 +71,7 @@ void Population_Mu1<T, L>::execute() {
     children = (this->mutate == nullptr) ? children : this->mutate(children, this->generator);
     this->genes = (this->selectSurvivors == nullptr) ? this->genes : this->selectSurvivors(this->genes, fitnesses, children, this->generator);
     if(selectSurvivors_Div != nullptr){
-        div_preserver = (selectSurvivors_Div == nullptr) ? div_preserver : selectSurvivors_Div(this->genes, children[0], div_preserver, this->generator);
+        div_preserver = selectSurvivors_Div(this->genes, children[0], div_preserver, this->generator);
         this->genes = div_preserver.genes;
     }
 }

@@ -21,6 +21,13 @@ void test_algorithms_basic(){
     test_base(15, 2, 10, 0, 50);
 }
 
+void mu1_optimization_test(){
+    std::vector<int> ns = {15};
+    std::vector<int> mus = {10};
+    int runs = 30;
+    test_mu1_optimization(mus, ns, runs);
+}
+
 void emperical_experiments(){
     std::vector<int> ns = {3, 5, 10, 35, 50, 100, 200};
     std::vector<int> mus = {2, 5, 10, 20, 50, 100};
@@ -29,5 +36,6 @@ void emperical_experiments(){
 }
 
 int main(){
+    
     return 0;
 }
