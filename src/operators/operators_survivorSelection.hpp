@@ -166,18 +166,17 @@ std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Dive
             }
         }else{
             diversity_scores = diversity_preserver.diversity_scores;
-            for(int i = 0; i < selected_genes.size(); i++){
-                for(int j = i + 1; j < selected_genes.size(); j++){
-                    if(i == diversity_preserver.index || j == diversity_preserver.index){
-                        diversity_scores[{i,j}] = diversity_measure(selected_genes[i], selected_genes[j]);
-                    }
-                }
+            for(int i = 0; i < diversity_preserver.index; i++){
+                diversity_scores[{i,diversity_preserver.index}] = diversity_measure(selected_genes[i], selected_genes[diversity_preserver.index]);
+            }
+            for(int i = diversity_preserver.index + 1; i < selected_genes.size(); i++){
+                diversity_scores[{diversity_preserver.index,i}] = diversity_measure(selected_genes[diversity_preserver.index], selected_genes[i]);
             }
         }
         
         std::vector<int> indices(selected_genes.size());
         std::iota(indices.begin(), indices.end(), 0);
-        //std::shuffle(indices.begin(), indices.end(), generator);
+        std::shuffle(indices.begin(), indices.end(), generator);
 
         int n = std::accumulate(selected_genes[0].begin(), selected_genes[0].end(), 0, [](int sum, const std::vector<int>& machine) -> int {
             return sum + machine.size();
