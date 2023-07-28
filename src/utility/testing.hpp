@@ -137,7 +137,7 @@ void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, int runs){
     }
 }
 
-void test_mu1_unconstrained_single(std::vector<int> mus, std::vector<int> ns, int runs){
+void test_mu1_unconstrained(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, int runs){
 
     write_to_file("seed,n,mu,run,generations,max_generations,diversity,fitness,opt\n", "test_mu1_unconstrained_single.txt", false);
 
@@ -148,23 +148,26 @@ void test_mu1_unconstrained_single(std::vector<int> mus, std::vector<int> ns, in
     for(int n : ns){
         for(int mu : mus){
             if(mu > (n*n - n)/(n-1) ) continue;
-            for(int run = 0; run < runs; run++) {
-                std::cout << "n: " << n << ", mu: " << mu << ", run: " << run << std::endl;
-                int seed = n*mu*mu+n*run*run+n;
+            for(int m : ms){
+                if(m > n) continue;
+                for(int run = 0; run < runs; run++) {
+                    std::cout << "n: " << n << ", mu: " << mu << ", run: " << run << std::endl;
+                    int seed = n*mu*mu+n*run*run+n;
 
-                std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
-                std::vector<int> release_dates = get_release_dates(seed, processing_times);
-                std::vector<int> due_dates = get_due_dates(seed, processing_times);
+                    std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
+                    std::vector<int> release_dates = get_release_dates(seed, processing_times);
+                    std::vector<int> due_dates = get_due_dates(seed, processing_times);
 
-                std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
-                int OPT = evaluate({{moores_algorithm(processing_times, due_dates)}})[0];
+                    std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
+                    int OPT = evaluate({{moores_algorithm(processing_times, due_dates)}})[0];
 
-                Population<T,L>  mu1_unconst_pop = mu1_unconstrained(
-                    seed, 1, n, mu,
-                    terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutate_removeinsert(1), diversity_measure
-                );
-                std::string result = std::to_string(seed) + "," + std::to_string(n) + "," + std::to_string(mu) + "," + std::to_string(run+1) + "," + std::to_string(mu1_unconst_pop.get_generation()) + "," + std::to_string(n*n*mu) + "," + std::to_string(diversity_value(mu1_unconst_pop.get_genes(true))) + "," + std::to_string(evaluate({mu1_unconst_pop.get_bests(false, evaluate)[0]})[0]) + "," + std::to_string(OPT) + "\n";
-                write_to_file(result, "test_mu1_unconstrained_single.txt");
+                    Population<T,L>  mu1_unconst_pop = mu1_unconstrained(
+                        seed, 1, n, mu,
+                        terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutate_removeinsert(1), diversity_measure
+                    );
+                    std::string result = std::to_string(seed) + "," + std::to_string(n) + "," + std::to_string(mu) + "," + std::to_string(run+1) + "," + std::to_string(mu1_unconst_pop.get_generation()) + "," + std::to_string(n*n*mu) + "," + std::to_string(diversity_value(mu1_unconst_pop.get_genes(true))) + "," + std::to_string(evaluate({mu1_unconst_pop.get_bests(false, evaluate)[0]})[0]) + "," + std::to_string(OPT) + "\n";
+                    write_to_file(result, "test_mu1_unconstrained.txt");
+                }
             }
         }
     }
