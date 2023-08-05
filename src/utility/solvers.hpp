@@ -4,7 +4,6 @@
 #include <numeric>
 
 using T = std::vector<std::vector<int>>;
-using L = double;
 
 std::vector<int> moores_algorithm(std::vector<int> processing_times, std::vector<int> due_dates){
 
@@ -46,4 +45,8 @@ std::vector<int> moores_algorithm(std::vector<int> processing_times, std::vector
 
     schedule.insert(schedule.end(), rejected_jobs.begin(), rejected_jobs.end());
     return schedule;
+}
+
+T approximation_algorithm(std::vector<int> processing_times, std::vector<int> due_dates){
+    return {{}};
 }

@@ -137,9 +137,14 @@ void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, int runs){
     }
 }
 
-void test_mu1_unconstrained(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, int runs){
+void test_mu1(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, int runs){
 
-    write_to_file("seed,n,mu,run,generations,max_generations,diversity,fitness,opt\n", "test_mu1_unconstrained_single.txt", false);
+    std::string csv_head = "seed,n,mu,run,generations,max_generations,diversity,fitness,opt\n";
+    std::string filename_unconst = "test_mu1_unconstrained.txt";
+    std::string filename_const = "test_mu1_constrained.txt";
+
+    write_to_file(csv_head, filename_unconst, false);
+    write_to_file(csv_head, filename_const, false);
 
     std::function<double(const T&, const T&)> diversity_measure = diversity_DFM();
     std::function<double(const std::vector<T>&)> diversity_value = diversity_vector(diversity_measure);
@@ -159,14 +164,23 @@ void test_mu1_unconstrained(std::vector<int> mus, std::vector<int> ns, std::vect
                     std::vector<int> due_dates = get_due_dates(seed, processing_times);
 
                     std::function<std::vector<L>(const std::vector<T>&)> evaluate = evaluate_tardyjobs(processing_times, release_dates, due_dates);
-                    int OPT = evaluate({{moores_algorithm(processing_times, due_dates)}})[0];
+                    int OPT = 0;
+                    if(m == 1) OPT = evaluate({{moores_algorithm(processing_times, due_dates)}})[0];
+                    else OPT = evaluate({approximation_algorithm(processing_times, due_dates)})[0];
 
                     Population<T,L>  mu1_unconst_pop = mu1_unconstrained(
                         seed, m, n, mu,
                         terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutate_removeinsert(1), diversity_measure
                     );
-                    std::string result = std::to_string(seed) + "," + std::to_string(n) + "," + std::to_string(mu) + "," + std::to_string(run+1) + "," + std::to_string(mu1_unconst_pop.get_generation()) + "," + std::to_string(n*n*mu) + "," + std::to_string(diversity_value(mu1_unconst_pop.get_genes(true))) + "," + std::to_string(evaluate({mu1_unconst_pop.get_bests(false, evaluate)[0]})[0]) + "," + std::to_string(OPT) + "\n";
-                    write_to_file(result, "test_mu1_unconstrained.txt");
+                    std::string result_unconst = std::to_string(seed) + "," + std::to_string(n) + "," + std::to_string(mu) + "," + std::to_string(run+1) + "," + std::to_string(mu1_unconst_pop.get_generation()) + "," + std::to_string(n*n*mu) + "," + std::to_string(diversity_value(mu1_unconst_pop.get_genes(true))) + "," + std::to_string(evaluate({mu1_unconst_pop.get_bests(false, evaluate)[0]})[0]) + "," + std::to_string(OPT) + "\n";
+                    write_to_file(result_unconst, filename_unconst);
+
+                    Population<T,L>  mu1_const_pop = mu1_unconstrained(
+                        seed, m, n, mu,
+                        terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutate_removeinsert(1), diversity_measure
+                    );
+                    std::string result_const = std::to_string(seed) + "," + std::to_string(n) + "," + std::to_string(mu) + "," + std::to_string(run+1) + "," + std::to_string(mu1_const_pop.get_generation()) + "," + std::to_string(n*n*mu) + "," + std::to_string(diversity_value(mu1_const_pop.get_genes(true))) + "," + std::to_string(evaluate({mu1_const_pop.get_bests(false, evaluate)[0]})[0]) + "," + std::to_string(OPT) + "\n";
+                    write_to_file(result_const, filename_const);
                 }
             }
         }

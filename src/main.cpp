@@ -31,12 +31,12 @@ void mu1_optimization_test(){
 void emperical_experiments(){
     std::vector<int> ns = {3, 5, 10, 35, 50};
     std::vector<int> mus = {2, 5, 10, 20, 50};
-    std::vector<int> ms = {1};
-    int runs = 20;
-    test_mu1_unconstrained(mus, ns, ms, runs);
+    std::vector<int> ms = {1, 3, 5, 10};
+    int runs = 30;
+    test_mu1(mus, ns, ms, runs);
 }
 
 int main(){
-    mu1_optimization_test();
+    emperical_experiments();
     return 0;
 }
