@@ -34,7 +34,7 @@ void emperical_experiments(){
     std::vector<int> ms = {1, 3, 5, 10};
     std::vector<double> alphas = {0.2, 0.5, 1};
     int runs = 30;
-    test_mu1(mus, ns, ms, alphas, runs);
+    test_mu1(mus, ns, ms, alphas, runs, true);
 }
 
 int main(){
