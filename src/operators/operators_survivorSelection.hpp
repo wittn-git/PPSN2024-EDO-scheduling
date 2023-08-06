@@ -153,7 +153,6 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
 
 std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> select_pdiv(std::function<double(const T&, const T&)> diversity_measure) {
     return [diversity_measure](const std::vector<T>& parents, const T& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
-        assert(offspring.size() == 1);
         std::vector<T> selected_genes = parents;
         selected_genes.emplace(selected_genes.begin() + diversity_preserver.index, offspring);
 
@@ -208,3 +207,20 @@ std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Dive
         return { *max_it, false, diversity_scores, selected_genes };
     };
 }
+
+/*
+    qpdiv-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and offspring, if quality of offspring is at least OPT * (1+alpha), preserve diversity scores to improve runtime
+    Arguments:
+        - alpha:                parameter for quality threshold
+        - OPT:                  fitness value of optimal solution
+        - diversity_measure:    function taking two genes and returning a double representing the diversity
+        - evaluate:             function taking a vector of genes and returning a vector of fitnesses
+*/
+
+std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> select_qpdiv(double alpha, double OPT, std::function<double(const T&, const T&)> diversity_measure, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
+    return [alpha, OPT, diversity_measure, evaluate](const std::vector<T>& parents, const T& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
+        if(evaluate({offspring})[0] < OPT * (1 + alpha)) return diversity_preserver;
+        std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> div = select_pdiv(diversity_measure);
+        return div(parents, offspring, diversity_preserver, generator);
+    };
+};

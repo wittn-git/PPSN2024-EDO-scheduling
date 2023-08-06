@@ -56,7 +56,7 @@ Population_Mu1<T,L> mu1_unconstrained(
     return population;
 }
 
-Population<T,L> mu1_constrained(
+Population_Mu1<T,L> mu1_constrained(
     int seed, 
     int m, 
     int n, 
@@ -74,9 +74,10 @@ Population<T,L> mu1_constrained(
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_fixed(std::vector<T>(mu, initial_gene));
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents =  select_random(1);
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = select_qdiv(alpha, OPT, diversity_measure, evaluate);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors = nullptr;
+    std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> selectSurvivors_Div = select_qpdiv(alpha, OPT, diversity_measure, evaluate);
 
-    Population<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors);
+    Population_Mu1<T,L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
     population.execute(termination_criterion);
     return population;
 }

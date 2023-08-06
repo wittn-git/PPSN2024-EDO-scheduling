@@ -2,10 +2,13 @@
 
 #include <vector>
 #include <numeric>
+#include <iostream>
+#include <assert.h>
 
 using T = std::vector<std::vector<int>>;
 
 std::vector<int> moores_algorithm(std::vector<int> processing_times, std::vector<int> due_dates){
+    assert(processing_times.size() == due_dates.size());
 
     auto first_late = [&](std::vector<int> schedule) {
         int current_time = 0;
@@ -47,6 +50,31 @@ std::vector<int> moores_algorithm(std::vector<int> processing_times, std::vector
     return schedule;
 }
 
-T approximation_algorithm(std::vector<int> processing_times, std::vector<int> due_dates){
-    return {{}};
+T approximation_algorithm(std::vector<int> processing_times, std::vector<int> due_dates, int m){
+    assert(processing_times.size() == due_dates.size() && m <= processing_times.size());
+    int n = processing_times.size();
+    std::vector<int> jobs(n);
+    std::iota(jobs.begin(), jobs.end(), 0);   
+    std::sort(jobs.begin(), jobs.end(), [&](int a, int b) {
+        return processing_times[a] > processing_times[b];
+    });
+
+    std::vector<std::vector<int>> schedule(m);
+    for(int i = 0; i < m; i++){
+        schedule[i].emplace_back(jobs[0]);
+        jobs.erase(jobs.begin());
+    }
+    std::vector<int> machines_times(m, 0);
+    for(int i = 0; i < m; i++){
+        machines_times[i] += processing_times[schedule[i][0]];
+    }
+    
+    while(!jobs.empty()){
+        int machine = std::min_element(machines_times.begin(), machines_times.end()) - machines_times.begin();
+        schedule[machine].emplace_back(jobs[0]);
+        machines_times[machine] += processing_times[jobs[0]];
+        jobs.erase(jobs.begin());
+    }
+
+    return schedule;
 }

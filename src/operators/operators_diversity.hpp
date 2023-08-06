@@ -57,12 +57,12 @@ std::function<double(const std::vector<T>&)> diversity_vector(std::function<doub
                 diversity_scores.emplace_back(diversity_measure(genes[i], genes[j]));
             }
         }
-        return 1 - (euclideanNorm(diversity_scores) / ((n-m) * std::sqrt((mu * mu - mu)/2)));
+        return 1 - (euclideanNorm(diversity_scores) / ((n-1) * std::sqrt((mu * mu - mu)/2)));
     };
 }
 
 std::function<double(const std::vector<double>&)> diversity_vector(int n, int m, int mu){
     return [n, m, mu](const std::vector<double>& diversity_scores) -> double {
-        return 1 - (euclideanNorm(diversity_scores) / ((n-m) * std::sqrt((mu * mu - mu)/2)));
+        return 1 - (euclideanNorm(diversity_scores) / ((n-1) * std::sqrt((mu * mu - mu)/2)));
     };
 }
