@@ -137,10 +137,10 @@ void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, int runs){
     }
 }
 
-void test_mu1(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, bool constrained){
+void test_mu1(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, bool constrained, std::string file_suffix){
 
-    std::string filename_unconst = "test_mu1_unconstrained.txt";
-    std::string filename_const = "test_mu1_constrained.txt";
+    std::string filename_unconst = "test_mu1_unconstrained" + file_suffix + ".txt";
+    std::string filename_const = "test_mu1_constrained.txt" + file_suffix + ".txt";
 
     if(!constrained) write_to_file("seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt\n", filename_unconst, false);
     if(constrained) write_to_file("seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt,alpha\n", filename_const, false);

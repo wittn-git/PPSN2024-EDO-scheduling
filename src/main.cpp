@@ -34,18 +34,10 @@ void emperical_experiments(){
     std::vector<int> ms = {1, 3, 5, 10};
     std::vector<double> alphas = {0.2, 0.5, 1};
     int runs = 30;
-    test_mu1(mus, ns, ms, alphas, runs, true);
+    test_mu1(mus, ns, ms, alphas, runs, true, "");
 }
 
 int main(){
-
-    // declare df mdiversity measure
-    std::function<double(const T& , const T&)> df = diversity_DFM();
-    T gene1 = {{}, {0,1}, {2}};
-    T gene2 = {{}, {0,1}, {2}};
-    // decalre diversity vector
-    std::function<double(const std::vector<T>&)> diversity = diversity_vector(df);
-   // std::cout << (euclideanNorm(diversity_scores) / ((n-m) * std::sqrt((mu * mu - mu)/2))) << std::endl;
     emperical_experiments();
     return 0;
 }
