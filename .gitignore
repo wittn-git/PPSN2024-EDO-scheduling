@@ -38,3 +38,6 @@ src/main
 info.txt
 \bin
 \test
+
+experiments/scripts/*
+!experiments/scripts/*.py
