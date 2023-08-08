@@ -1,7 +1,8 @@
 import pandas as pd
 from tabulate import tabulate
 
-constrained = True
+constrained = False
+runs = 30
 
 csv_file, parameters_combinations, res_file = "", [], ""
 if constrained:
@@ -19,6 +20,7 @@ pd.set_option('display.max_columns', None)
 df = pd.read_csv(csv_file)
 
 grouped = df.groupby(parameters_combinations)
+
 occurrences = grouped.size().reset_index(name='occurrences')
 summary = grouped.agg({
     'generations': 'mean',
@@ -35,9 +37,15 @@ std_generations = grouped['generations'].std().reset_index(name='std_generations
 result = pd.merge(occurrences, summary, on=parameters_combinations)
 result = pd.merge(result, std_generations, on=parameters_combinations)
 
-# TODO number of times div was maximally high
-# TODO interpolate runtime
-
+result['diversity_not_1'] = grouped.apply(lambda x: (x['diversity'] != 1).sum()).reset_index(drop=True)
+result['mean_generations_ratio'] = result['generations'] / result['max_generations']
 result.to_csv(res_file+".csv")
 with open(res_file+".txt", 'w') as f:
     f.write(tabulate(result, headers='keys', tablefmt='psql'))
+
+average_mean_generations_ratio = result[result['diversity_not_1'] == 0]['mean_generations_ratio'].mean()
+overall_max_diversity_reached = len(df[df['diversity'] == 1])
+total_instances = len(df)
+print("Average mean generations ratio:", average_mean_generations_ratio)
+print("Overall max diversity reached:", overall_max_diversity_reached)
+print("Total instances:", total_instances)
