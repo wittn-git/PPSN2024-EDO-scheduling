@@ -61,17 +61,18 @@ if __name__ == "__main__":
     #csv_file = "res_constrained.csv"
     csv_file = "res_constrained.csv"
     #header = ["$\mu$", "$n$", "$m$", "$D_0$", "\\textbf{mean}", "\\textbf{std}"]
-    header = ["$\mu$", "$n$", "$m$", "$\\alpha$", "$D_0$", "\\textbf{mean}", "\\textbf{std}"]
+    header = ["$\mu$", "$n$", "$m$", "$\\alpha$", "$D_0$", "$OBJ$", "$OPT$", "$OBJ<OPT$"]
     #columns = ['mu', 'n', 'm', 'diversity', 'generations', 'std_generations']
-    columns = ['mu', 'n', 'm', 'alpha', 'diversity', 'generations', 'std_generations']
+    columns = ['mu', 'n', 'm', 'alpha', 'diversity', 'fitness', 'opt', 'fitness_worse_than_opt']
     #grouping = ['mu', 'n']
     grouping = ['mu', 'n', 'm']
     #res_file = "table_constrained.tex"
     res_file = "table_constrained.tex"
     #decimal_columns = ['diversity', 'generations', 'std_generations']
-    decimal_columns = ['diversity', 'generations', 'std_generations', 'alpha']
+    decimal_columns = ['diversity', 'fitness', 'alpha', 'opt', 'fitness_worse_than_opt']
     #include_entries = [0,1,6,13,16,17,18,21,31,32,33,34,35,44,49,50]
-    include_entries = [0,2,7,10,11, 55, 64,76,77,100,109,124,160,161,165,167]
+    #include_entries = [0,2,7,10,11, 55, 64,76,77,100,109,124,160,161,165,167]
+    include_entries = [2,3,5,9,11,12,16,17,31,32,33,62,63,72,73,101]
     print("Number of entries:", len(include_entries))
     
     latex_table = read_csv_to_latex(csv_file, header, columns, grouping, decimal_columns, include_entries, False)

@@ -39,5 +39,5 @@ info.txt
 \bin
 \test
 
-experiments/scripts/*
-!experiments/scripts/*.py
+experiments/scripts_analysis/*
+!experiments/scripts_analysis/*.py

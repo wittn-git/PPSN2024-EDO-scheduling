@@ -2,42 +2,42 @@
 
 #include "utility/testing.hpp"
 #include "utility/solvers.hpp"
+#include "utility/parsing.hpp"
 
 using T = std::vector<std::vector<int>>;
 
-void test_mutation_runtimes(){
-    std::vector<int> ns = {3, 5, 10, 35, 50, 100, 200};
-    int runs = 50;
-    std::function<double(int)> runtime_linearithmic = [](int n) {
-        return n * std::log(n);
-    };
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_rai = mutate_removeinsert(1);
-    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_nswap = mutate_neighborswap(1);
-    test_2mu_runtime("RAI", ns, 1, 2, runs, mutate_rai, runtime_linearithmic);
-    test_2mu_runtime("NSWAP", ns, 1, 2, runs, mutate_nswap, runtime_linearithmic);
-}
+/*
+    Parameters (in order):
+        - Algorithm: {"Mu1-const", "Mu1-unconst", "Simple", "Base" "Survivor-Opt"}
+        - Mutation-Operator: {"1RAI", "XRAI", "NSWAP"}
+        - Output-File: String
+        - runs: Int
+        - mus: mu_1,mu_2,...,mu_w
+        - ns: n_1,n_2,...,n_x
+        - m: m_1,m_2,...m_y
+        - alpha: a_1,a_2,...,a_z
+*/
+int main(int argc, char **argv){
 
-void test_algorithms_basic(){
-    test_base(15, 2, 10, 0, 50);
-}
+    std::string experiment_type(argv[1]);
+    std::string mutation_operator = argv[2];
+    std::string output_file = argv[3];
+    int runs = std::stoi(argv[4]);
+    std::vector<int> mus = parse_list<int>(argv[5]);
+    std::vector<int> ns = parse_list<int>(argv[6]);
+    std::vector<int> ms = parse_list<int>(argv[7]);
+    std::vector<double> alphas = (argc == 9) ? parse_list<double>(argv[8]) : std::vector<double>();
 
-void mu1_optimization_test(){
-    std::vector<int> ns = {15};
-    std::vector<int> mus = {10};
-    int runs = 30;
-    test_mu1_optimization(mus, ns, runs);
-}
-
-void emperical_experiments(){
-    std::vector<int> ns = {3, 5, 10, 35, 50};
-    std::vector<int> mus = {2, 5, 10, 20, 50};
-    std::vector<int> ms = {1, 3, 5, 10};
-    std::vector<double> alphas = {0.2, 0.5, 1};
-    int runs = 30;
-    test_mu1(mus, ns, ms, alphas, runs, true, "");
-}
-
-int main(){
-    emperical_experiments();
+    assert((argc == 8 || (argc == 9 && (experiment_type == "Mu1-const" || experiment_type == "Base"))) && "Pass either 8 or 9 arguments.");
+    
+    if(experiment_type == "Mu1-const"){
+        test_algorithm(mus, ns, ms, alphas, runs, output_file, experiment_type, mutation_operator);
+    }else if(experiment_type == "Base"){
+        test_base(ns, ms, mus, alphas, output_file);
+    }else if(experiment_type == "Survivor-Opt"){
+        test_mu1_optimization(mus, ns, ms, runs, output_file);
+    }else{
+        throw std::invalid_argument("Invalid experiment type.");
+    }
     return 0;
 }
