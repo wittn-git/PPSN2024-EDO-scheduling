@@ -17,23 +17,23 @@ using T = std::vector<std::vector<int>>;
         - m: m_1,m_2,...m_y
         - alpha: a_1,a_2,...,a_z
 */
+
 int main(int argc, char **argv){
+    assert((argc == 9) && "Pass 8 arguments.");
 
     std::string experiment_type(argv[1]);
     std::string mutation_operator = argv[2];
     std::string output_file = argv[3];
-    int runs = std::stoi(argv[4]);
+    int runs = (std::string(argv[4]) == "") ? 0 : std::stoi(argv[4]);
     std::vector<int> mus = parse_list<int>(argv[5]);
     std::vector<int> ns = parse_list<int>(argv[6]);
     std::vector<int> ms = parse_list<int>(argv[7]);
     std::vector<double> alphas = (argc == 9) ? parse_list<double>(argv[8]) : std::vector<double>();
-
-    assert((argc == 8 || (argc == 9 && (experiment_type == "Mu1-const" || experiment_type == "Base"))) && "Pass either 8 or 9 arguments.");
     
     if(experiment_type == "Mu1-const"){
         test_algorithm(mus, ns, ms, alphas, runs, output_file, experiment_type, mutation_operator);
     }else if(experiment_type == "Base"){
-        test_base(ns, ms, mus, alphas, output_file);
+        test_base(ns, ms, mus, alphas, output_file); //TODO check why this does not print 
     }else if(experiment_type == "Survivor-Opt"){
         test_mu1_optimization(mus, ns, ms, runs, output_file);
     }else{
