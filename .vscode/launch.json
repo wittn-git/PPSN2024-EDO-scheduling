@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["Base", "", "output.txt", "", "5", "5", "1", "0.5"],
+            "args": ["Mu1-const", "1RAI", "output.txt", "10", "15", "1", "0.5", "1"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}/../build",
             "environment": [],

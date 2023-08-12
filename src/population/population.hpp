@@ -42,6 +42,9 @@ public:
         std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
     );
 
+    // Default constructor for initialization purposes
+    Population();
+
     //executes one iteration of the evolutionary algorithm
     virtual void execute();   
     //executes iterations of the evolutionary algorithm until the termination criterion is met                                              
@@ -85,6 +88,9 @@ Population<T, L>::Population(
     genes = initialize(generator);
     assert(genes.size() > 0 && "initialize function must return a non-empty vector");
 }
+
+template <typename T, typename L>
+Population<T, L>::Population(){};
 
 template <typename T, typename L>
 void Population<T, L>::execute() {

@@ -3,10 +3,10 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include "../population/population.hpp"
 
-using T = std::vector<std::vector<int>>;
 using L = double;
 
 void write_to_file(std::string content, std::string filename, bool append = true) {
@@ -26,7 +26,7 @@ void write_to_file(std::string content, std::string filename, bool append = true
     file.close();
 }
 
-std::string get_population_information_string(
+std::string createPopulationReport(
     Population<T,L>& population,
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
     std::function<double(const std::vector<T>&)> diversity_value,
@@ -40,17 +40,21 @@ std::string get_population_information_string(
     std::string output = algorithm_name + "\n";
     output += "mu: " + std::to_string(mu) + " ";
     output += "n: " + std::to_string(n) + " ";
-    output += "m: " + std::to_string(m) + " ";
+    output += "m: " + std::to_string(m) + "\n";
     output += "Generations: " + std::to_string(population.get_generation()) + "\n";
     output += "Diversity: " + std::to_string(diversity_value(population.get_genes(true))) + "\n";
     output += "Unique individuals: " + std::to_string(population.get_size(false)) + "\n";
     output +=  "Number of unique best individuals: " + std::to_string(bests.size()) + "\n";
-    output += "Best fitness: " + std::to_string(fitnesses__bests[0]) + "\n\n";
+    output += "Best fitness: " + std::to_string(fitnesses__bests[0]) + "\n";
 
     return output;
 }
 
-std::string get_csv_line(){
-    //TODO implement
-    return "";
+template<typename... Args>
+std::string get_csv_line(const Args&... args) {
+    std::ostringstream oss;
+    bool isFirst = true;
+    ((oss << (isFirst ? "" : ", ") << args, isFirst = false), ...);
+    oss << "\n";
+    return oss.str();
 }

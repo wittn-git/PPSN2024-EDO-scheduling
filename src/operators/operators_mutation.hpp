@@ -44,6 +44,21 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_remov
 }
 
 /*
+    X Remove Insert Mutation: Remove a job from a schedule and insert it again, number of jobs sampled from a poisson distribution
+    Arguments:
+        - mutation_rate:        probability of a mutation occurring for each gene
+*/
+
+std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_xremoveinsert(double mutation_rate) {
+    // TODO - Implement
+    throw std::runtime_error("Not implemented");
+    return [mutation_rate](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
+        std::vector<T> mutated_genes(genes.size());
+        return mutated_genes;
+    };
+}
+
+/*
     Neighbor-Swap Mutation: Swap two adjacent jobs from the same machine
     Arguments:
         - mutation_rate:        probability of a mutation occurring for each gene
