@@ -38,5 +38,7 @@ info.txt
 \bin
 \test
 
-experiments/scripts_analysis/*
-!experiments/scripts_analysis/*.py
+experiments/scripts_analysis/results/*
+
+experiments/scripts_hpc/results/*
+experiments/scripts_hpc/temp_job.sh

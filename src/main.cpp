@@ -3,20 +3,22 @@
 
 /*
     Parameters (in order):
-        - Algorithm: {"Mu1-const", "Mu1-unconst", "Simple", "Base" "Survivor-Opt"}
+        - Algorithm: {"Mu1-const", "Mu1-unconst", "Simple", "Base", "Survivor-Opt"}
         - Mutation-Operator: {"1RAI", "XRAI", "NSWAP"}
         - Output-File: String
+        - runs: Int
         - mus: mu_1,mu_2,...,mu_w
         - ns: n_1,n_2,...,n_x
         - m: m_1,m_2,...m_y
         - alpha: a_1,a_2,...,a_z
-        - runs: Int
+        - lambda: Double (only for "XRAI", mean of the poisson distribution)
 */
 
 int main(int argc, char **argv){
 
     auto [experiment_type, mutation_operator, output_file, mus, ns, ms, alphas, runs] = parse_arguments(argc, argv);
 
+    // TODO Add NOAH
     if(experiment_type == "Mu1-const" || experiment_type == "Mu1-unconst" || experiment_type == "Simple"){
         test_algorithm(mus, ns, ms, alphas, runs, output_file, experiment_type, mutation_operator);
     }else if(experiment_type == "Base"){

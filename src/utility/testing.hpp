@@ -13,6 +13,9 @@
 using T = std::vector<std::vector<int>>;
 using L = double;
 
+// TODO: run preliminary tests for max generations
+// TODO run preliminary tests for lambdas
+
 // Utility function for testing -----------------------------------------------------
 
 int generate_seed(int mu, int n, int m, int run){

@@ -52,6 +52,7 @@ std::vector<int> moores_algorithm(MachineSchedulingProblem problem){
     return schedule;
 }
 
+
 T approximation_algorithm(MachineSchedulingProblem problem, int m){
     // TODO: implement
     throw std::runtime_error("appoximation_algorithm not implemented to completion");

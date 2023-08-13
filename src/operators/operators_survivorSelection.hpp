@@ -104,7 +104,7 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
 std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_qdiv(double alpha, double OPT, std::function<double(const T&, const T&)> diversity_measure, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
     return [alpha, OPT, diversity_measure, evaluate](const std::vector<T>& parents, const std::vector<L>& fitnesses_parents, const std::vector<T>& offspring, std::mt19937& generator) -> std::vector<T> {
         assert(offspring.size() == 1);
-        if(evaluate(offspring)[0] < OPT * (1 + alpha)) return parents;
+        if(evaluate(offspring)[0] < OPT * alpha - 1) return parents;
         std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> div = select_div(diversity_measure);
         return div(parents, {}, offspring, generator);
     };
