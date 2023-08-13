@@ -54,8 +54,8 @@ std::vector<int> moores_algorithm(MachineSchedulingProblem problem){
 
 
 T approximation_algorithm(MachineSchedulingProblem problem, int m){
-    // TODO: implement
-    throw std::runtime_error("appoximation_algorithm not implemented to completion");
+    // TODO: implement (Minimizing the number of tardy jobs for m parallel machines  by Ho et al)
+    // throw std::runtime_error("appoximation_algorithm not implemented to completion");
     assert(problem.processing_times.size() == problem.due_dates.size() && m <= problem.processing_times.size());
     int n = problem.processing_times.size();
     std::vector<int> jobs(n);

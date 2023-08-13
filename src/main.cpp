@@ -18,7 +18,6 @@ int main(int argc, char **argv){
 
     auto [experiment_type, mutation_operator, output_file, mus, ns, ms, alphas, runs] = parse_arguments(argc, argv);
 
-    // TODO Add NOAH
     if(experiment_type == "Mu1-const" || experiment_type == "Mu1-unconst" || experiment_type == "Simple"){
         test_algorithm(mus, ns, ms, alphas, runs, output_file, experiment_type, mutation_operator);
     }else if(experiment_type == "Base"){

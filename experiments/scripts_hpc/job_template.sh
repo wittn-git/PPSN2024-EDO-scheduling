@@ -10,5 +10,4 @@
 #SBATCH --output=results/output_JOB_NAME.txt
 #SBATCH --time=WALL_TIME
 
-# sh build_run.sh $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10}
-echo "Starting job with parameters: $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10}"
+sh build_run.sh $1 $2 $3 $4 $5 $6 $7 $8 $9

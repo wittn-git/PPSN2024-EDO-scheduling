@@ -78,3 +78,5 @@ if __name__ == "__main__":
     latex_table = read_csv_to_latex(csv_file, header, columns, grouping, decimal_columns, include_entries, False)
     with open(res_file, 'w') as f:
         f.write(latex_table)
+
+    #TODO clean up

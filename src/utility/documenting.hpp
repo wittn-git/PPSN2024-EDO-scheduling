@@ -54,7 +54,7 @@ template<typename... Args>
 std::string get_csv_line(const Args&... args) {
     std::ostringstream oss;
     bool isFirst = true;
-    ((oss << (isFirst ? "" : ", ") << args, isFirst = false), ...);
+    ((oss << (isFirst ? "" : ",") << args, isFirst = false), ...);
     oss << "\n";
     return oss.str();
 }

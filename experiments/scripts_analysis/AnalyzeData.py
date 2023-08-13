@@ -70,3 +70,5 @@ print("Percentage of cases where fitness is not worse than opt:", len(df[(df['fi
 print("Percentage of cases where alpha = 0.2 and diversity is 1:", len(df[(df['alpha'] == 0.2) & (df['diversity'] == 1)]) / len(df[(df['alpha'] == 0.2)]))
 print("Percentage of cases where alpha = 0.5 and diversity is 1:", len(df[(df['alpha'] == 0.5) & (df['diversity'] == 1)]) / len(df[(df['alpha'] == 0.5)]))
 print("Percentage of cases where alpha = 1 and diversity is 1:", len(df[(df['alpha'] == 1) & (df['diversity'] == 1)]) / len(df[(df['alpha'] == 1)]))
+
+#TODO clean up

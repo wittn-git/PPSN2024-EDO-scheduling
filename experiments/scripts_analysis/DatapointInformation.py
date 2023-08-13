@@ -22,3 +22,5 @@ print("Number of datapoints:", num_datapoints)
 print("Number of duplicate datapoints:", num_duplicates)
 print("Number of value combinations:", len(value_combinations))
 print("Possible value combinations:\n", value_combinations)
+
+#TODO clean up
