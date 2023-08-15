@@ -6,7 +6,6 @@
 
 struct MachineSchedulingProblem{
     std::vector<int> processing_times;
-    std::vector<int> release_dates;
     std::vector<int> due_dates;
 };
 
@@ -18,11 +17,6 @@ std::vector<int> get_processing_times(int seed, int n, int max){
         return dist(generator);
     });
     return processing_times;
-}
-
-// Returns a vector of only zeros
-std::vector<int> get_release_dates(int seed, std::vector<int> processing_times){
-    return std::vector<int>(processing_times.size(), 0);
 }
 
 std::vector<int> get_due_dates(int seed, std::vector<int> processing_times){
@@ -46,7 +40,6 @@ std::vector<int> get_due_dates(int seed, std::vector<int> processing_times){
 
 MachineSchedulingProblem get_problem(int seed, int n, int max_processing_time) {
     std::vector<int> processing_times = get_processing_times(seed, n, max_processing_time);
-    std::vector<int> release_dates = get_release_dates(seed, processing_times);
     std::vector<int> due_dates = get_due_dates(seed, processing_times);
-    return {processing_times, release_dates, due_dates};
+    return {processing_times, due_dates};
 }

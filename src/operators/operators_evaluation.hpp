@@ -13,9 +13,7 @@ using L = double;
 /*
     Makespan Evaluation: Evaluates machine schedules based on the makespan
     Arguments:
-        - processing_times: Times it takes to complete each job
-        - release_dates:    Points in time where every job is released
-        - due_dates:        Points in time where every job is due
+        - problem:          MachineSchedulingProblem struct containing the problem data
 */
 
 std::function<std::vector<L>(const std::vector<T>&)> evaluate_makespan(MachineSchedulingProblem problem) { 
@@ -26,11 +24,7 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_makespan(MachineSc
             for(auto schedule : gene){
                 int current_time = 0;
                 for(auto it = schedule.begin(); it != schedule.end(); it++){
-                    if(problem.release_dates[*it] > current_time){
-                        current_time = problem.release_dates[*it] + problem.processing_times[*it];
-                    }else{
-                        current_time += problem.processing_times[*it];
-                    }
+                    current_time += problem.processing_times[*it];
                 }
                 end_points.emplace_back(current_time);
             }
@@ -44,7 +38,6 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_makespan(MachineSc
     Tardyjobs Evaluation: Evaluates machine schedules based on the number of tardy jobs
     Arguments:
         - processing_times: Times it takes to complete each job
-        - release_dates:    Points in time where every job is released
         - due_dates:        Points in time where every job is due
 */
 
@@ -56,11 +49,7 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_tardyjobs(MachineS
             for(auto schedule : gene){
                 int current_time = 0;
                 for(auto it = schedule.begin(); it != schedule.end(); it++){
-                    if(problem.release_dates[*it] > current_time){
-                        current_time = problem.release_dates[*it] + problem.processing_times[*it];
-                    }else{
-                        current_time += problem.processing_times[*it];
-                    }
+                    current_time += problem.processing_times[*it];
                     if(current_time > problem.due_dates[*it]){
                         tardy_jobs_n++;
                     }
