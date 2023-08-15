@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --ntasks=1
-#SBATCH --mem-per-cpu=150M
+#SBATCH --mem-per-cpu=500M
 
 #SBATCH --mail-user=dominic.wittner@rwth-aachen.de
 #SBATCH --mail-type=ALL
