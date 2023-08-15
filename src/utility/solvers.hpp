@@ -54,6 +54,8 @@ std::vector<int> moores_algorithm(MachineSchedulingProblem problem){
 
 T approximation_algorithm(MachineSchedulingProblem problem, int m){
 
+    assert(problem.processing_times.size() == problem.due_dates.size());
+
     auto first_late = [&](std::vector<int> schedule) {
         int current_time = 0;
         for(int i = 0; i < schedule.size(); i++){

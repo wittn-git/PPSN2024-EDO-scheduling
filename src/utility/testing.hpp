@@ -13,9 +13,6 @@
 using T = std::vector<std::vector<int>>;
 using L = double;
 
-// TODO: run preliminary tests for max generations
-// TODO run preliminary tests for lambdas
-
 // Utility function for testing -----------------------------------------------------
 
 int generate_seed(int mu, int n, int m, int run){
@@ -121,13 +118,13 @@ void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, std::vecto
     loop_parameters(mus, ns, ms, runs, mu1_optimization_test, true);
 }
 
-void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, std::string output_file, std::string algorithm, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
-    std::string header = "seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt";
+void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, std::string output_file, std::string algorithm, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
+    std::string header = "seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt,algorithm,mutation";
     header += algorithm == "Mu1-const" ? ",alpha\n" : "\n";
     write_to_file(header, output_file, false);
     int max_processing_time = 50;
 
-    auto algorithm_test = [output_file, max_processing_time, algorithm, mutation_operator, alphas](int mu, int n, int m, int run) {
+    auto algorithm_test = [output_file, max_processing_time, algorithm, mutation_operator, alphas, operator_string](int mu, int n, int m, int run) {
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
@@ -139,13 +136,13 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
                 initialize_random(mu, n, m), evaluate, mutation_operator, select_roulette(mu), select_mu(mu, evaluate),
                 300
             );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT);
+            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, algorithm, operator_string);
         }else if(algorithm == "Mu1-unconst"){
             Population<T,L> population = mu1_unconstrained(
                 seed, m, n, mu,
                 terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, diversity_measure
             );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT);
+            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, algorithm, operator_string);
         }else if(algorithm == "Mu1-const"){
             for(double alpha: alphas){
                 Population<T,L> population = mu1_constrained(
@@ -153,7 +150,7 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
                     terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, diversity_measure,
                     alpha, optimal_solution
                 );
-                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, alpha);
+                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, alpha, algorithm, operator_string);
             }
         }
         write_to_file(result, output_file);

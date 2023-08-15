@@ -26,7 +26,7 @@ std::vector<list_type> parse_list(std::string input){
 
 using T = std::vector<std::vector<int>>;
 
-std::tuple<std::string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>, std::string, std::vector<int>, std::vector<int>, std::vector<int>, std::vector<double>, int> parse_arguments(int argc, char **argv){
+std::tuple<std::string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>, std::string, std::vector<int>, std::vector<int>, std::vector<int>, std::vector<double>, int, std::string> parse_arguments(int argc, char **argv){
     if(argc != 10){
         throw std::invalid_argument("Pass 9 arguments. You only passed "+ std::to_string(argc - 1) + ". (Pass '-' for unused parameters)");
     }
@@ -41,6 +41,7 @@ std::tuple<std::string, std::function<std::vector<T>(const std::vector<T>&, std:
     if(mutation_operator_name == "1RAI"){
         mutation_operator = mutate_removeinsert(1);
     }else if(mutation_operator_name == "XRAI"){
+        mutation_operator_name += "_" + std::to_string(lambda);
         mutation_operator = mutate_xremoveinsert(1, lambda);
     }else if(mutation_operator_name == "NSWAP"){
         mutation_operator = mutate_neighborswap(1);
@@ -55,5 +56,5 @@ std::tuple<std::string, std::function<std::vector<T>(const std::vector<T>&, std:
     std::vector<double> alphas = parse_list<double>(argv[8]);
     
 
-    return std::make_tuple(experiment_type, mutation_operator, output_file, mus, ns, ms, alphas, runs);
+    return std::make_tuple(experiment_type, mutation_operator, output_file, mus, ns, ms, alphas, runs, mutation_operator_name);
 }

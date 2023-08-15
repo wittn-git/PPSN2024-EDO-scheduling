@@ -33,6 +33,7 @@ summary = grouped.agg({
 summary['diversity'] = summary['diversity'] * 100
 summary['fitness_worse_than_opt'] = grouped.apply(lambda x: (x['fitness'] < x['opt']).sum() / len(x)).reset_index(drop=True)
 std_generations = grouped['generations'].std().reset_index(name='std_generations')
+# for each entry, print ration of generations and max_generations
 
 result = pd.merge(summary, occurrences, on=parameters_combinations)
 result = pd.merge(result, std_generations, on=parameters_combinations)
