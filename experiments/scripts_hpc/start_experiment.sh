@@ -9,7 +9,7 @@ start_job() {
     JOB_NAME=$2_$3_mu${4//,/-}_n${5//,/-}_m${6//,/-}_a${8//./}_l${9//./}_${10}
     OUTPUT_FILE=output_$JOB_NAME.csv
     sed "s/JOB_NAME/$JOB_NAME/g; s/WALL_TIME/$1/g" job_template.sh > temp_job.sh
-    sbatch temp_job.sh $2 $3 $4 $5 $6 $7 $8
+    sbatch temp_job.sh $2 $3 $OUTPUT_FILE $4 $5 $6 $7 $8 $9
     rm temp_job.sh
 }
 
