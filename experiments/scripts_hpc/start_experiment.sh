@@ -13,17 +13,16 @@ start_job() {
     rm temp_job.sh
 }
 
-algorithms=$(parse_array $2)
-mutation_operators=$(parse_array $3)
+if [ "$#" -ne 10 ]; then
+    echo "Usage: $0 <walltime> <algorithm> <mutation_operator> <runs> <mus> <ns> <ms> <alphas> <lambdas> <output suffix>"
+    exit 1
+fi
+
 alphas=$(parse_array $8)
 lambdas=$(parse_array $9)
 
-for algorithm in ${algorithms[@]}; do
-    for mutation_operator in ${mutation_operators[@]}; do
-        for lambda in "${lambdas[@]:-""}"; do
-            for alpha in "${alphas[@]:-""}"; do
-                start_job $1 $algorithm $mutation_operator $4 $5 $6 $7 $alpha $lambda ${10}
-            done
-        done
+for alpha in ${alphas[@]}; do
+    for lambda in ${lambdas[@]}; do
+        start_job $1 $2 $3 $4 $5 $6 $7 $alpha $lambda ${10}
     done
 done
