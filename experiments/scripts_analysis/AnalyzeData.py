@@ -1,75 +1,86 @@
-import pandas as pd
+import sys
 from tabulate import tabulate
+import pandas as pd
 
-constrained = True
-runs = 30
+def get_data_information(df, grouped_df, grouping_columns):
 
-csv_file, parameters_combinations, res_file = "", [], ""
-if constrained:
-    csv_file = "../data/test_mu1_constrained.csv"
-    parameters_combinations = ['mu', 'n', 'm', 'alpha']
-    res_file = "res_constrained"
-else:
-    csv_file = "../data/test_mu1_unconstrained.csv"
-    parameters_combinations = ['mu', 'n', 'm']
-    res_file = "res_unconstrained"
+    df['diversity'] = df['diversity'] * 100
+    merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
+    df['mean_generations_ratio'] = df['generations'] / df['max_generations']
+    df['fitness_worse_than_opt'] = df['fitness'] < df['opt']
+    
 
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
+    result = []
+    result.append(("Number of datapoints: ", str(len(df))))
+    result.append(("Number of duplicate datapoints: ", str(len(df) - len(df.drop_duplicates()))))
+    result.append(("Number of value combinations: ", str(len(grouped_df))))
 
-df = pd.read_csv(csv_file)
+    result.append(("Ratio of max diversity reached: ", str(len(df[df['diversity'] == 100]) / len(df))))
 
-grouped = df.groupby(parameters_combinations)
+    result.append(("Average generation ratio (cases with only max diversity): ", str(df[df['diversity'] == 100]['mean_generations_ratio'].mean())))
+    result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 100) & (merged_df['diversity_grouped'] == 100)]['mean_generations_ratio'].mean())))
+    result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 100]['mean_generations_ratio'].mean())))
+    result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 100 & (merged_df['diversity_grouped'] < 100)]['mean_generations_ratio'].mean())))
 
-occurrences = grouped.size().reset_index(name='occurrences')
-summary = grouped.agg({
-    'generations': 'mean',
-    'fitness': 'mean',
-    'opt': 'mean',
-    'diversity': 'mean',
-    'max_generations': 'mean'
-}).reset_index()
+    result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(df[(df['fitness_worse_than_opt'] == 0)]) / len(df))))
+    result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(df[(df['diversity'] == 100) & (df['fitness_worse_than_opt'] == 0)]) / len(df))))
 
-summary['diversity'] = summary['diversity'] * 100
-summary['fitness_worse_than_opt'] = grouped.apply(lambda x: (x['fitness'] < x['opt']).sum() / len(x)).reset_index(drop=True)
-std_generations = grouped['generations'].std().reset_index(name='std_generations')
-# for each entry, print ration of generations and max_generations
+    result_str = ""
 
-result = pd.merge(summary, occurrences, on=parameters_combinations)
-result = pd.merge(result, std_generations, on=parameters_combinations)
+    max_lengths = [max(len(item) for item in tpl) for tpl in zip(*result)]
+    for tpl in result:
+        formatted_items = [item.ljust(max_length) for item, max_length in zip(tpl, max_lengths)]
+        result_str += ' | '.join(formatted_items) + "\n"
 
-result['diversity_not_1'] = grouped.apply(lambda x: (x['diversity'] != 1).sum()).reset_index(drop=True)
-result['mean_generations_ratio'] = result['generations'] / result['max_generations']
-result.to_csv(res_file+".csv")
-with open(res_file+".txt", 'w') as f:
-    f.write(tabulate(result, headers='keys', tablefmt='psql'))
+    result_str += "\n" + "Value combinations with not only max diversity:\n" + str(grouped_df[grouped_df['diversity'] != 100][grouping_columns]) + "\n\n"
 
-# print all combinations with not only max diversity
-print(result[result['diversity_not_1'] != 0][parameters_combinations])
+    if('alpha' in grouping_columns):
+        result_str += "Percentage of cases where diversity is 1:\n"
+        for alpha in df['alpha'].unique():
+            result_str += "alpha: " + str(alpha) + ": " + str(len(df[(df['alpha'] == alpha) & (df['diversity'] == 100)]) / len(df[(df['alpha'] == alpha)])) + "\n"
 
-result = result[result['occurrences'] == runs]
-average_mean_generations_ratio = result[result['diversity_not_1'] == 0]['mean_generations_ratio'].mean()
-overall_max_diversity_reached = len(df[df['diversity'] == 1])
-total_instances = len(df)
-print("Average mean generations ratio (combinations with only max diversity):", average_mean_generations_ratio)
-print("Ratio max diversity reached:", overall_max_diversity_reached/total_instances)
+    return result_str
 
-filtered_df = df.groupby(parameters_combinations).filter(lambda group: not all(group['diversity'] == 1))
-print("Average generations ratio (combinations where there are non-max diversities):", filtered_df['generations'].mean() / filtered_df['max_generations'].mean())
-n_not_max_diversity = len(filtered_df)
-filtered_df = filtered_df[filtered_df['diversity'] == 1]
-n_not_max_diversity_and_max_diversity = len(filtered_df)
-print("Ratio of cases where the combination is not max diversity, but the case is:", n_not_max_diversity_and_max_diversity/n_not_max_diversity)
-print("Average generations ratio (combinations where there are non-max diversities, but take only the max diversity cases):", filtered_df['generations'].mean() / filtered_df['max_generations'].mean())
+def get_summary(df, grouping_columns, runs):
+    grouped = df.groupby(grouping_columns)
+    occurrences = grouped.size().reset_index(name='occurrences')
+    summary = grouped.agg({
+        'generations': 'mean',
+        'fitness': 'mean',
+        'opt': 'mean',
+        'diversity': 'mean',
+        'max_generations': 'mean'
+    }).reset_index()
 
-# add to df boolean: fitness worse than opt
-df['fitness_worse_than_opt'] = df['fitness'] < df['opt'] 
-# print percentage of cases where diversity is 1 and fitness is not worse than opt
-print("Percentage of cases where diversity is 1 and fitness is not worse than opt:", len(df[(df['diversity'] == 1) & (df['fitness_worse_than_opt'] == 0)]) / len(df))
-print("Percentage of cases where fitness is not worse than opt:", len(df[(df['fitness_worse_than_opt'] == 0)]) / len(df))
-# print percentage for all the cases where alpha = 0.2 and diversity is 1
-print("Percentage of cases where alpha = 0.2 and diversity is 1:", len(df[(df['alpha'] == 0.2) & (df['diversity'] == 1)]) / len(df[(df['alpha'] == 0.2)]))
-print("Percentage of cases where alpha = 0.5 and diversity is 1:", len(df[(df['alpha'] == 0.5) & (df['diversity'] == 1)]) / len(df[(df['alpha'] == 0.5)]))
-print("Percentage of cases where alpha = 1 and diversity is 1:", len(df[(df['alpha'] == 1) & (df['diversity'] == 1)]) / len(df[(df['alpha'] == 1)]))
+    summary['std_generations'] = grouped['generations'].std().reset_index(drop=True)
+    summary['diversity'] = summary['diversity'] * 100
+    summary['fitness_worse_than_opt'] = grouped.apply(lambda x: (x['fitness'] < x['opt']).sum() / len(x)).reset_index(drop=True)
+    summary['diversity_not_1'] = grouped.apply(lambda x: (x['diversity'] != 1).sum()).reset_index(drop=True)
+    summary['mean_generations_ratio'] = summary['generations'] / summary['max_generations']
+    summary['fitness_worse_than_opt'] = summary['fitness'] < summary['opt'] 
 
-#TODO clean up
+    summary = pd.merge(summary, occurrences, on=grouping_columns)   
+
+    return summary
+
+if(__name__ == "__main__"):
+
+    if len(sys.argv) < 5:
+        print("Usage: python3 AnalyzeData.py <input_file> <output_file_name> <grouping_columns> <runs>")
+        exit(1)
+
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+    grouping_columns = sys.argv[3].split(",")
+    runs = int(sys.argv[4])
+
+    pd.set_option('display.max_rows', None)
+    df = pd.read_csv(input_file)
+
+    summary = get_summary(df, grouping_columns, runs)
+    summary.to_csv(output_file + "_summary.csv")
+    with open(output_file + "_summary.txt", 'w') as f:
+        f.write(tabulate(summary, headers='keys', tablefmt='psql'))
+    
+    with open(output_file + "_data_information.txt", 'w') as f:
+        f.write(get_data_information(df, summary, grouping_columns))
