@@ -185,7 +185,7 @@ void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
                 terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
                 OPT*(1+alpha), g, r, c
             );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, operator_string, alpha, g, r, c);
+            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, "NOAH", operator_string, alpha, g, r, c);
         }
         write_to_file(result, output_file);
     };
