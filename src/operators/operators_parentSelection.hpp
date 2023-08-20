@@ -76,7 +76,6 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::
     Random Parent Selection: Select subgroup of specified size randomly
     Arguments:
         - parent_size: number of individuals to select
-
 */
 
 std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_random(int parent_count) {
@@ -88,5 +87,15 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::
             return genes[rand_index];
         });
         return selected_genes;
+    };
+}
+
+/*
+    All Parent Selection: Select all individuals
+*/
+
+std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_all() {
+    return [](const std::vector<T>& genes, const std::vector<L>& fitnesses, std::mt19937& generator) -> std::vector<T> {
+        return genes;
     };
 }

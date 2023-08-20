@@ -18,9 +18,15 @@ using L = double;
 void objective_optimization(
     Population<T,L>& population, 
     int obj_generations_n,
+    int mu,
+    double bound_value,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj,
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
+    std::function<std::vector<L>(const std::vector<T>&)> evaluate
 ){
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bd = mutate_bound(mutate, evaluate, bound_value, mu);
+    population.set_mutate(mutate_bd);
     population.set_selectParents(select_parents_obj);
     population.set_selectSurvivors(select_survivors_obj);
     population.execute(terminate_generations(obj_generations_n));
@@ -55,18 +61,24 @@ int bound_change(
 void diversity_optimization(
     Population<T,L>& population,
     int div_generations_con,
+    int mu,
+    double bound_value,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div,
+    std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
+    std::function<std::vector<L>(const std::vector<T>&)> evaluate,
     std::function<double(const std::vector<T>&)> diversity_value
 ){
     int i = 0;
     population.set_selectParents(select_parents_div);
     population.set_selectSurvivors(select_survivors_div);
     while(i < div_generations_con){
+        std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bd = mutate_bound(mutate, evaluate, bound_value, mu + 1 - population.get_size(true));
+        population.set_mutate(mutate_bd);
         std::vector<T> old_genes = population.get_genes(true);
         population.execute();
         std::vector<T> new_genes = population.get_genes(true);
-        if(diversity_value(old_genes) >= diversity_value(new_genes)){
+        if(diversity_value(old_genes) >= diversity_value(new_genes) && old_genes.size() > 1){
             population.set_genes(old_genes);
             i++;
         }
@@ -91,7 +103,7 @@ Population<T,L> noah(
 
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_random(mu, n, m);
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
-    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div = select_random(1);
+    std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_div = select_all();
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_obj = select_mu(mu, evaluate);
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_survivors_div = select_div(diversity_measure);
     std::function<double(const std::vector<T>&)> diversity_value = diversity_vector(diversity_measure);
@@ -100,9 +112,10 @@ Population<T,L> noah(
     double bound_value = -std::numeric_limits<double>::max();
     
     while( bound_value < barrier_value && !termination_criterion(population) ){
-        objective_optimization(population, obj_generations_n, select_parents_obj, select_survivors_obj);
+        objective_optimization(population, obj_generations_n, mu, bound_value, select_parents_obj, select_survivors_obj, mutate, evaluate);
         bound_value = bound_change(population, evaluate, remaining_solutions_n);
-        diversity_optimization(population, div_generations_con, select_parents_div, select_survivors_div, diversity_value);
+        diversity_optimization(population, div_generations_con, mu, bound_value, select_parents_div, select_survivors_div, mutate, evaluate, diversity_value);
+        std::cout << "Generation: " << population.get_generation() << " Bound: " << bound_value << std::endl;
     }
     return population;
 }

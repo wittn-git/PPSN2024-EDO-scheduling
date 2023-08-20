@@ -48,7 +48,7 @@ public:
     //executes one iteration of the evolutionary algorithm
     virtual void execute();   
     //executes iterations of the evolutionary algorithm until the termination criterion is met                                              
-    void execute(std::function<bool(Population<T,L>&)> termination_criterion);                         
+    virtual void execute(std::function<bool(Population<T,L>&)> termination_criterion);                         
     //returns the best genes in the population, using the given evaluate function
     std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate);       
     //returns the current genes in the population           
@@ -67,8 +67,8 @@ public:
     // setters of the operator functions
     void set_evaluate(const std::function<std::vector<L>(const std::vector<T>&)>& evaluate);
     void set_selectParents(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents);
-    void set_mutate(const std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& mutate);
-    void set_recombine(const std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& recombine);
+    void set_mutate(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate);
+    void set_recombine(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine);
     void set_selectSurvivors(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors);
 };
 
@@ -193,8 +193,8 @@ void Population<T, L>::set_evaluate(const std::function<std::vector<L>(const std
 template <typename T, typename L>
 void Population<T, L>::set_selectParents(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents){ this->selectParents = selectParents;}
 template <typename T, typename L>
-void Population<T, L>::set_mutate(const std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& mutate){ this->mutate = mutate;}
+void Population<T, L>::set_mutate(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& mutate){ this->mutate = mutate;}
 template <typename T, typename L>
-void Population<T, L>::set_recombine(const std::function<std::vector<T>(const std::vector<T>&, double, std::mt19937&)>& recombine){ this->recombine = recombine;}
+void Population<T, L>::set_recombine(const std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine){ this->recombine = recombine;}
 template <typename T, typename L>
 void Population<T, L>::set_selectSurvivors(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors){ this->selectSurvivors = selectSurvivors;}

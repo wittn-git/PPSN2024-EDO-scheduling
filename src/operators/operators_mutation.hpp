@@ -104,3 +104,27 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_neigh
         return mutated_genes;
     };
 }
+
+/*
+    Bounded-Mutation: Mutate genes with given operator such that the resulting genes are bounded by a given value
+    Arguments:
+        - mutation_operator:    mutation operator to be used
+        - evaluate:             fitness function
+        - mu:                   number of solutions to be generated
+*/
+
+std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bound(std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator, std::function<std::vector<L>(const std::vector<T>&)> evaluate, double bound, int mu){
+    return [mutation_operator, evaluate, bound, mu](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
+        std::vector<T> mutated_genes;
+        std::uniform_int_distribution< int > distribute_parent(0, genes.size() - 1);
+        while(mutated_genes.size() < mu){
+            int parent = distribute_parent(generator);
+            T mutated_gene = mutation_operator({genes[parent]}, generator)[0];
+            std::vector<L> fitnesses = evaluate({mutated_gene});
+            if(bound <= evaluate({mutated_gene})[0]){
+                mutated_genes.emplace_back(mutated_gene);
+            }
+        }
+        return mutated_genes;
+    };
+}

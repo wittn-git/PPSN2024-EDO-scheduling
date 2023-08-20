@@ -44,16 +44,15 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
 };
 
 /*
-    div-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and one offspring
+    div-Selection: Returns a vector of combined parents and offspring removing the individual which yields the highest diversity value when removed
     Arguments
         - diversity_measure:    function taking two genes and returning a double representing the diversity
 */
 
 std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_div(std::function<double(const T&, const T&)> diversity_measure) {
     return [diversity_measure](const std::vector<T>& parents, const std::vector<L>& fitnesses_parents, const std::vector<T>& offspring, std::mt19937& generator) -> std::vector<T> {
-        assert(offspring.size() == 1);
         std::vector<T> selected_genes = parents;
-        selected_genes.emplace_back(offspring[0]);
+        selected_genes.insert(selected_genes.end(), offspring.begin(), offspring.end());
         std::vector<std::tuple<int, int, double>> diversity_scores;
         diversity_scores.reserve(selected_genes.size() * (selected_genes.size() - 1) / 2);
         for(int i = 0; i < selected_genes.size(); i++){
