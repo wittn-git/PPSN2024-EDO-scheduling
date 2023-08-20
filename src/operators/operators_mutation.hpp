@@ -115,16 +115,21 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_neigh
 
 std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bound(std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator, std::function<std::vector<L>(const std::vector<T>&)> evaluate, double bound, int mu){
     return [mutation_operator, evaluate, bound, mu](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
-        std::vector<T> mutated_genes;
+        std::vector<T> offspring;
         std::uniform_int_distribution< int > distribute_parent(0, genes.size() - 1);
-        while(mutated_genes.size() < mu){
-            int parent = distribute_parent(generator);
-            T mutated_gene = mutation_operator({genes[parent]}, generator)[0];
-            std::vector<L> fitnesses = evaluate({mutated_gene});
-            if(bound <= evaluate({mutated_gene})[0]){
-                mutated_genes.emplace_back(mutated_gene);
+        while(offspring.size() < mu){
+            std::vector<T> parents;
+            for(int i = 0; i < mu - offspring.size(); i++){
+                parents.emplace_back(distribute_parent(generator));
+            }
+            std::vector<T> mutated_genes = mutation_operator(parents, generator);
+            std::vector<L> fitnesses = evaluate(mutated_genes);
+            for(int i = 0; i < mutated_genes.size(); i++){
+                if(bound <= fitnesses[i]){
+                    offspring.emplace_back(mutated_genes[i]);
+                }
             }
         }
-        return mutated_genes;
+        return offspring;
     };
 }
