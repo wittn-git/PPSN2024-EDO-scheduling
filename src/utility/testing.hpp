@@ -48,7 +48,7 @@ std::tuple<std::function<std::vector<L>(const std::vector<T>&)>, std::function<d
 // Test functions ------------------------------------------------------------------
 
 void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, std::string output_file, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
-   
+    
     int max_processing_time = 50;
     write_to_file("", output_file, false);
 
@@ -65,13 +65,13 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
         );
         write_to_file(createPopulationReport(simple_pop, evaluate, diversity_value, "Simple", mu, n, m) + "\n", output_file);
         
-        for(int alpha : alphas){
+        for(double alpha : alphas){
             Population<T,L>  mu1_const_pop = mu1_constrained(
                 seed, m, n, mu,
                 terminate_generations(2500), evaluate, mutation_operator, diversity_measure,
                 alpha, optimal_solution
             );
-            write_to_file(createPopulationReport(mu1_const_pop, evaluate, diversity_value, "Mu1-const", mu, n, m) + "\n", output_file);
+            write_to_file(createPopulationReport(mu1_const_pop, evaluate, diversity_value, "Mu1-const " + std::to_string(alpha), mu, n, m) + "\n", output_file);
         }
         
         Population<T,L>  mu1_unconst_pop = mu1_unconstrained(
@@ -80,12 +80,14 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
         );
         write_to_file(createPopulationReport(mu1_unconst_pop, evaluate, diversity_value, "Mu1-unconst", mu, n, m) + "\n", output_file);
 
-        Population<T,L> noah_pop = noah(
-            seed, m, n, mu, 
-            terminate_generations(500), evaluate, mutation_operator, select_roulette(mu), diversity_measure,
-            0, 8, 15, 3
-        );
-        write_to_file(createPopulationReport(noah_pop, evaluate, diversity_value, "Noah", mu, n, m), output_file);
+        for(double alpha : alphas){
+            Population<T,L> noah_pop = noah(
+                seed, mu, n, m,
+                terminate_generations(500), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
+                OPT*(1+alpha), mu, 0.5*mu, 0.5*mu
+            );
+            write_to_file(createPopulationReport(noah_pop, evaluate, diversity_value, "Noah " + std::to_string(alpha), mu, n, m), output_file);
+        }
     };
 
     loop_parameters(mus, ns, ms, runs, base_test, true);
@@ -181,7 +183,7 @@ void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
         std::string result;
         for(double alpha: alphas){
             Population<T,L> population = noah(
-                seed, m, n, mu, 
+                seed, mu, n, m, 
                 terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
                 OPT*(1+alpha), g, r, c
             );
