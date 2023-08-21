@@ -11,21 +11,15 @@ lambdas="0,0.25,1"
 runs="30"
 
 for ((i = 0; i < ${#wall_times[@]}; i++)); do
-    ./start_experiment.sh "${wall_times[i]}" "NOAH" "1RAI" $runs $mus "${n_batches[i]}" $ms $alphas "-" "${suffixes[i]}"
-    ./start_experiment.sh "${wall_times[i]}" "NOAH" "XRAI" $runs $mus "${n_batches[i]}" $ms $alphas $lambdas "${suffixes[i]}"
-    ./start_experiment.sh "${wall_times[i]}" "NOAH" "NSWAP" $runs $mus "${n_batches[i]}" "1" $alphas  "-" "${suffixes[i]}"
-done
-
-: '
-for ((i = 0; i < ${#wall_times[@]}; i++)); do
     ./start_experiment.sh "${wall_times[i]}" "Mu1-unconst" "1RAI" $runs $mus "${n_batches[i]}" $ms "-" "-" "${suffixes[i]}"
     ./start_experiment.sh "${wall_times[i]}" "Mu1-const" "1RAI" $runs $mus "${n_batches[i]}" $ms $alphas "-" "${suffixes[i]}"
     ./start_experiment.sh "${wall_times[i]}" "Mu1-unconst" "XRAI" $runs $mus "${n_batches[i]}" $ms "-" $lambdas "${suffixes[i]}"
     ./start_experiment.sh "${wall_times[i]}" "Mu1-const" "XRAI" $runs $mus "${n_batches[i]}" $ms $alphas $lambdas "${suffixes[i]}"
     ./start_experiment.sh "${wall_times[i]}" "Mu1-unconst" "NSWAP" $runs $mus "${n_batches[i]}" "1" "-" "-" "${suffixes[i]}"
     ./start_experiment.sh "${wall_times[i]}" "Mu1-const" "NSWAP" $runs $mus "${n_batches[i]}" "1" $alphas "-" "${suffixes[i]}"
+    ./start_experiment.sh "${wall_times[i]}" "NOAH" "1RAI" $runs $mus "${n_batches[i]}" $ms $alphas "-" "${suffixes[i]}"
+    ./start_experiment.sh "${wall_times[i]}" "NOAH" "XRAI" $runs $mus "${n_batches[i]}" $ms $alphas $lambdas "${suffixes[i]}"
+    ./start_experiment.sh "${wall_times[i]}" "NOAH" "NSWAP" $runs $mus "${n_batches[i]}" "1" $alphas  "-" "${suffixes[i]}"
 done
 
-
 ./start_experiment.sh "0-01:00:00" "Survivor-Opt" "1RAI" "30" "10,25" "40" "1" "-" "-" "-"
-'
