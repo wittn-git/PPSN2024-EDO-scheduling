@@ -11,9 +11,9 @@ lambdas="0,0.25,1"
 runs="30"
 
 for ((i = 0; i < ${#wall_times[@]}; i++)); do
-    ./start_experiment.sh "${wall_times[i]}" "NOAH" "1RAI" $runs $mus "${n_batches[i]}" $ms "-" "-" "${suffixes[i]}"
-    ./start_experiment.sh "${wall_times[i]}" "NOAH" "XRAI" $runs $mus "${n_batches[i]}" $ms "-" $lambdas "${suffixes[i]}"
-    ./start_experiment.sh "${wall_times[i]}" "NOAH" "NSWAP" $runs $mus "${n_batches[i]}" "1" "-" "-" "${suffixes[i]}"
+    ./start_experiment.sh "${wall_times[i]}" "NOAH" "1RAI" $runs $mus "${n_batches[i]}" $ms $alphas "-" "${suffixes[i]}"
+    ./start_experiment.sh "${wall_times[i]}" "NOAH" "XRAI" $runs $mus "${n_batches[i]}" $ms $alphas $lambdas "${suffixes[i]}"
+    ./start_experiment.sh "${wall_times[i]}" "NOAH" "NSWAP" $runs $mus "${n_batches[i]}" "1" $alphas  "-" "${suffixes[i]}"
 done
 
 : '

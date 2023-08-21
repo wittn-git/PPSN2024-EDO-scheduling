@@ -23,7 +23,7 @@ void loop_parameters(std::vector<int> mus, std::vector<int> ns, std::vector<int>
     for(int n : ns){
         for(int mu : mus){
             for(int m : ms){
-                if(restricted && ((mu > (n*n - n)/(n-m)) || m > n) ) continue;
+                if(restricted && m != n && ((mu > (n*n - n)/(n-m)) || m > n) ) continue;
                 for(int run = 0; run < runs; run++) func(mu, n, m, run);
             }
         }
@@ -179,7 +179,6 @@ void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
         auto [OPT, optimal_solution] = get_optimal_solution(problem, m, evaluate);
         int g = g_ratio*mu, r = r_ratio*mu, c = c_ratio*mu;
-        std::cout << "mu: " << mu << ", n: " << n << ", m: " << m << ", run: " << run << "\n";
         std::string result;
         for(double alpha: alphas){
             Population<T,L> population = noah(
