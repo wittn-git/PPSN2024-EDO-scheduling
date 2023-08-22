@@ -2,33 +2,36 @@ import sys
 from tabulate import tabulate
 import pandas as pd
 
-def get_data_information(df, grouped_df, grouping_columns, runs):
+def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, mutation):
 
-    df['diversity'] = df['diversity'] * 100
-    merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
+    df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
+    df = df.copy()
     df['mean_generations_ratio'] = df['generations'] / df['max_generations']
     df['fitness_worse_than_opt'] = df['fitness'] < df['opt']
-
+    merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
+    merged_df['diversity'] = merged_df['diversity'] * 100
+    
     result = []
-    result.append(("Number of datapoints: ", str(len(df))))
-    result.append(("Number of duplicate datapoints: ", str(len(df) - len(df.drop_duplicates()))))
+    result.append(("Number of datapoints: ", str(len(merged_df))))
+    result.append(("Number of duplicate datapoints: ", str(len(merged_df) - len(merged_df.drop_duplicates()))))
     result.append(("Number of value combinations: ", str(len(grouped_df))))
 
-    result.append((f"(After here: removed groups with unequal to {runs} occurrences)", ""))
+    result.append((f"(After here: removed groups with unequal to {runs} occurrences and without duplicates)", ""))
+    merged_df.drop_duplicates()
     merged_df = merged_df[merged_df['occurrences'] == runs]
+    if(len(merged_df) != 0):
+        result.append(("Number of datapoints: ", str(len(merged_df))))
+        result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))    
 
-    result.append(("Number of datapoints: ", str(len(merged_df))))
-    result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))    
+        result.append(("Ratio of max diversity reached: ", str(len(merged_df[merged_df['diversity'] == 100]) / len(merged_df))))
 
-    result.append(("Ratio of max diversity reached: ", str(len(df[df['diversity'] == 100]) / len(df))))
+        result.append(("Average generation ratio (cases with only max diversity): ", str(merged_df[merged_df['diversity'] == 100]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 100) & (merged_df['diversity_grouped'] == 100)]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 100]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 100 & (merged_df['diversity_grouped'] < 100)]['mean_generations_ratio'].mean())))
 
-    result.append(("Average generation ratio (cases with only max diversity): ", str(merged_df[merged_df['diversity'] == 100]['mean_generations_ratio'].mean())))
-    result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 100) & (merged_df['diversity_grouped'] == 100)]['mean_generations_ratio'].mean())))
-    result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 100]['mean_generations_ratio'].mean())))
-    result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 100 & (merged_df['diversity_grouped'] < 100)]['mean_generations_ratio'].mean())))
-
-    result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
-    result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 100) & (merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
+        result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
+        result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 100) & (merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
 
     result_str = ""
 
@@ -41,15 +44,16 @@ def get_data_information(df, grouped_df, grouping_columns, runs):
 
     if('alpha' in grouping_columns):
         result_str += "Percentage of cases where diversity is 1:\n"
-        for alpha in df['alpha'].unique():
-            result_str += "alpha: " + str(alpha) + ": " + str(len(df[(df['alpha'] == alpha) & (df['diversity'] == 100)]) / len(df[(df['alpha'] == alpha)])) + "\n"
+        for alpha in merged_df['alpha'].unique():
+            result_str += "alpha: " + str(alpha) + ": " + str(len(merged_df[(merged_df['alpha'] == alpha) & (merged_df['diversity'] == 100)]) / len(merged_df[(merged_df['alpha'] == alpha)])) + "\n"
 
-    # all value combinations with there occurrences, but only the grouping columns and occurrences
-    result_str += "\n" + "Value combinations with there occurrences:\n" + str(grouped_df[grouping_columns + ['occurrences']]) + "\n\n"
+    result_str += "\n" + "Value combinations with their occurrences:\n" + str(grouped_df[grouping_columns + ['occurrences']]) + "\n\n"
 
     return result_str
 
-def get_summary(df, grouping_columns):
+def get_summary(df, grouping_columns, algorithm, mutation):
+    df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
+    
     grouped = df.groupby(grouping_columns)
     occurrences = grouped.size().reset_index(name='occurrences')
     summary = grouped.agg({
@@ -74,21 +78,31 @@ def get_summary(df, grouping_columns):
 if(__name__ == "__main__"):
 
     if len(sys.argv) < 5:
-        print("Usage: python3 AnalyzeData.py <input_file> <output_file_name> <grouping_columns> <runs>")
+        print("Usage: python3 AnalyzeData.py <input_file> <output_file_prefix> <grouping_columns> <runs> [<algorithms> <mutations>]")
         exit(1)
 
     input_file = sys.argv[1]
-    output_file = sys.argv[2]
+    output_file_prefix = sys.argv[2]
     grouping_columns = sys.argv[3].split(",")
     runs = int(sys.argv[4])
+    algorithms = sys.argv[5].split(",") if len(sys.argv) > 5 else None
+    mutations = sys.argv[6].split(",") if len(sys.argv) > 6 else None
 
     pd.set_option('display.max_rows', None)
     df = pd.read_csv(input_file)
 
-    summary = get_summary(df, grouping_columns)
-    summary.to_csv(output_file + "_summary.csv")
-    with open(output_file + "_summary.txt", 'w') as f:
-        f.write(tabulate(summary, headers='keys', tablefmt='psql'))
-    
-    with open(output_file + "_data_information.txt", 'w') as f:
-        f.write(get_data_information(df, summary, grouping_columns, runs))
+    algorithm_combinations = df[['algorithm', 'mutation']].drop_duplicates()
+    if(algorithms != None): 
+        algorithm_combinations = algorithm_combinations[algorithm_combinations['algorithm'].isin(algorithms)]
+    if(mutations != None):
+        algorithm_combinations = algorithm_combinations[algorithm_combinations['mutation'].isin(mutations)]
+
+    for _, entry in algorithm_combinations.iterrows():
+        output_file = output_file_prefix + "_" + entry['algorithm'] + "_" + entry['mutation']
+        summary = get_summary(df, grouping_columns, entry['algorithm'], entry['mutation'])
+        summary.to_csv(output_file + "_summary.csv")
+        with open(output_file + "_summary.txt", 'w') as f:
+            f.write(tabulate(summary, headers='keys', tablefmt='psql'))
+        
+        with open(output_file + "_data_information.txt", 'w') as f:
+            f.write(get_data_information(df, summary, grouping_columns, runs, entry['algorithm'], entry['mutation']))

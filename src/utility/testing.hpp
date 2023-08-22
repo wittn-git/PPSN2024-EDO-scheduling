@@ -158,7 +158,7 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
                     terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, diversity_measure,
                     alpha, optimal_solution
                 );
-                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, alpha, algorithm, operator_string);
+                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, algorithm, operator_string, alpha);
             }
         }
         write_to_file(result, output_file);
