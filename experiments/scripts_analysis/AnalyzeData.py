@@ -2,28 +2,33 @@ import sys
 from tabulate import tabulate
 import pandas as pd
 
-def get_data_information(df, grouped_df, grouping_columns):
+def get_data_information(df, grouped_df, grouping_columns, runs):
 
     df['diversity'] = df['diversity'] * 100
     merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
     df['mean_generations_ratio'] = df['generations'] / df['max_generations']
     df['fitness_worse_than_opt'] = df['fitness'] < df['opt']
-    
 
     result = []
     result.append(("Number of datapoints: ", str(len(df))))
     result.append(("Number of duplicate datapoints: ", str(len(df) - len(df.drop_duplicates()))))
     result.append(("Number of value combinations: ", str(len(grouped_df))))
 
+    result.append((f"(After here: removed groups with unequal to {runs} occurrences)", ""))
+    merged_df = merged_df[merged_df['occurrences'] == runs]
+
+    result.append(("Number of datapoints: ", str(len(merged_df))))
+    result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))    
+
     result.append(("Ratio of max diversity reached: ", str(len(df[df['diversity'] == 100]) / len(df))))
 
-    result.append(("Average generation ratio (cases with only max diversity): ", str(df[df['diversity'] == 100]['mean_generations_ratio'].mean())))
+    result.append(("Average generation ratio (cases with only max diversity): ", str(merged_df[merged_df['diversity'] == 100]['mean_generations_ratio'].mean())))
     result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 100) & (merged_df['diversity_grouped'] == 100)]['mean_generations_ratio'].mean())))
     result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 100]['mean_generations_ratio'].mean())))
     result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 100 & (merged_df['diversity_grouped'] < 100)]['mean_generations_ratio'].mean())))
 
-    result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(df[(df['fitness_worse_than_opt'] == 0)]) / len(df))))
-    result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(df[(df['diversity'] == 100) & (df['fitness_worse_than_opt'] == 0)]) / len(df))))
+    result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
+    result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 100) & (merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
 
     result_str = ""
 
@@ -39,9 +44,12 @@ def get_data_information(df, grouped_df, grouping_columns):
         for alpha in df['alpha'].unique():
             result_str += "alpha: " + str(alpha) + ": " + str(len(df[(df['alpha'] == alpha) & (df['diversity'] == 100)]) / len(df[(df['alpha'] == alpha)])) + "\n"
 
+    # all value combinations with there occurrences, but only the grouping columns and occurrences
+    result_str += "\n" + "Value combinations with there occurrences:\n" + str(grouped_df[grouping_columns + ['occurrences']]) + "\n\n"
+
     return result_str
 
-def get_summary(df, grouping_columns, runs):
+def get_summary(df, grouping_columns):
     grouped = df.groupby(grouping_columns)
     occurrences = grouped.size().reset_index(name='occurrences')
     summary = grouped.agg({
@@ -77,10 +85,10 @@ if(__name__ == "__main__"):
     pd.set_option('display.max_rows', None)
     df = pd.read_csv(input_file)
 
-    summary = get_summary(df, grouping_columns, runs)
+    summary = get_summary(df, grouping_columns)
     summary.to_csv(output_file + "_summary.csv")
     with open(output_file + "_summary.txt", 'w') as f:
         f.write(tabulate(summary, headers='keys', tablefmt='psql'))
     
     with open(output_file + "_data_information.txt", 'w') as f:
-        f.write(get_data_information(df, summary, grouping_columns))
+        f.write(get_data_information(df, summary, grouping_columns, runs))
