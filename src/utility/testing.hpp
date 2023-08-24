@@ -20,6 +20,8 @@ int generate_seed(int mu, int n, int m, int run){
 }
 
 void loop_parameters(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, int runs, std::function<void(int, int, int, int)> func, bool restricted){
+    auto start = std::chrono::high_resolution_clock::now();
+    #pragma omp parallel for collapse(3)
     for(int n : ns){
         for(int mu : mus){
             for(int m : ms){
@@ -28,6 +30,8 @@ void loop_parameters(std::vector<int> mus, std::vector<int> ns, std::vector<int>
             }
         }
     }
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << "ms\n";
 }
 
 std::tuple<int, T> get_optimal_solution(MachineSchedulingProblem problem, int m, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
