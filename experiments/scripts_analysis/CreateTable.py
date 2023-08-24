@@ -3,6 +3,9 @@ import pandas as pd
 def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, include_entries=[], footnotesize=True):
     dataframes = [pd.read_csv(file) for file in csv_file]
 
+    for df in dataframes:
+        df = df.sort_values(by=grouping_attributes)
+
     if(include_entries):
         for i, df in enumerate(dataframes):
             dataframes[i] = df.loc[include_entries]
@@ -29,37 +32,42 @@ def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes
     for i in range(len(dataframes)):
         latex_table += f"\cmidrule(lr){{{str(1+ len(grouping_header) + i*len(ungrouped_header)) + '-' + str(len(grouping_header) + (i+1)*len(ungrouped_header))}}} "
     latex_table += "\n" + "& ".join(grouping_header) + ("&" + " & ".join(ungrouped_header)) * len(dataframes) + "\\\\ \n"
-    # TODO finish
-    '''included_attributes = []
+
+    included_attributes = []
     occurence_dict = {}
     for attribute in grouping_attributes:
         included_attributes.append(attribute)
-        grouped = df.groupby(included_attributes)
+        grouped = dataframes[0].groupby(included_attributes)
         for row in grouped.size().reset_index().values:
             keys = [str(x) for x in row[:-1]]
             occurence_dict[",".join(keys)] = row[-1]
-    
+
     currents = {attr: -1 for attr in grouping_attributes}
-    for i, row in df.iterrows():
+    # TODO fix inclusion of not existing attributes
+
+    for rows in zip(*[df.iterrows() for df in dataframes]):
+        first_row = rows[0][1]
         columns = []
         new_group = False
         for attribute in actual_header:
             if(attribute not in currents):
-                columns.append(row[attribute])
+                for row in rows:
+                    columns.append(row[1][attribute])
                 continue
-            if(currents[attribute] == -1 or currents[attribute] != row[attribute] or new_group):
+            if(currents[attribute] == -1 or currents[attribute] != first_row[attribute] or new_group):
                 if(not new_group): 
                     new_group = True
-                    latex_table += f"\cline{{{grouping_attributes.index(attribute)+1}-{len(actual_header)}}}\n"
-                currents[attribute] = row[attribute]
+                    if(attribute != grouping_attributes[-1]):
+                        latex_table += f"\cline{{{grouping_attributes.index(attribute)+1}-{len(grouping_header) + len(ungrouped_header) * len(dataframes)}}}\n"
+                currents[attribute] = first_row[attribute]
                 occ_keys = []
                 for attr in grouping_attributes:
-                    occ_keys.append(str(int(currents[attr])))
+                    occ_keys.append(currents[attr])
                     if(attr == attribute): break
-                columns.append(f"\multirow{{{occurence_dict[','.join(occ_keys)]}}}{{{'*'}}}{{{row[attribute]}}}")
+                columns.append(f"\multirow{{{occurence_dict[','.join(occ_keys)]}}}{{{'*'}}}{{{first_row[attribute]}}}") 
             else: columns.append("")
         latex_table += " & ".join(columns) + "\\\\ \n"
-    '''
+    
     latex_table += " \\bottomrule\n"
     latex_table += "  \end{tabular}\n"
     if footnotesize: latex_table += " \end{footnotesize}\n"
@@ -71,14 +79,14 @@ if __name__ == "__main__":
     table_name = "table_unconstrained.tex"
     
     csv_files = [
-        "results/out_Mu1-const_NSWAP_summary.csv",
         "results/out_Mu1-const_1RAI_summary.csv", 
         "results/out_Mu1-const_XRAI_0.000000_summary.csv",
         "results/out_Mu1-const_XRAI_0.250000_summary.csv",
-        "results/out_Mu1-const_XRAI_1.000000_summary.csv"
+        "results/out_Mu1-const_XRAI_1.000000_summary.csv",
+        "results/out_Mu1-const_NSWAP_summary.csv",
     ]
     upper_header = ["$NSWAP$", "$1(R+I)$", "$X(R+I), \lambda = 0.00$", "$X(R+I), \lambda = 0.25$", "$X(R+I), \lambda = 1.00$"]
-    header = ["$\mu$", "$n$", "$m$", "$\\alpha$", "$D_0$", "$OBJ$", "$OPT$", "$OBJ<OPT$"]
+    header = ["$\mu$", "$n$", "$m$", "$\\alpha$", "$D_0$", "$OBJ$", "$OPT$", "$>\%$"]
     columns = ['mu', 'n', 'm', 'alpha', 'diversity', 'fitness', 'opt', 'fitness_worse_than_opt']
     grouping = ['mu', 'n', 'm', 'alpha']
     grouping_header = ["$\mu$", "$n$", "$m$", "$\\alpha$"]
