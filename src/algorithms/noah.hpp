@@ -106,7 +106,6 @@ Population<T,L> noah(
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents_obj,
     std::function<double(const T&, const T&)> diversity_measure,
-    int barrier_value, 
     int obj_generations_n, 
     int remaining_solutions_n,
     int div_generations_con
@@ -124,7 +123,7 @@ Population<T,L> noah(
 
     Population population(seed, initialize, evaluate, select_parents_obj, mutate, recombine, select_survivors_obj);
     
-    while( bound_value < barrier_value && !termination_criterion(population) ){
+    while(!termination_criterion(population) ){
         objective_optimization(population, termination_criterion, select_parents_obj, select_survivors_obj, mutate_bd, evaluate, obj_generations_n, bound_value);
         bound_value = bound_change(population, evaluate, remaining_solutions_n);
         diversity_optimization(population, termination_criterion, select_parents_div, select_survivors_div, mutate, evaluate, diversity_value, bound_value, mu, div_generations_con);

@@ -19,19 +19,19 @@ int generate_seed(int mu, int n, int m, int run){
     return n*mu*mu+n*run*run+n+m*run+m*m+run;
 }
 
-void loop_parameters(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, int runs, std::function<void(int, int, int, int)> func, bool restricted){
-    auto start = std::chrono::high_resolution_clock::now();
-    #pragma omp parallel for collapse(3)
+bool is_viable_combination(int mu, int n, int m){
+    return (m < n) && (mu <= (n*n - n)/(n-m));
+}
+
+void loop_parameters(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, int runs, std::function<void(int, int, int, int)> func){
+    #pragma omp parallel for collapse(4)
     for(int n : ns){
         for(int mu : mus){
             for(int m : ms){
-                if(restricted && m != n && ((mu > (n*n - n)/(n-m)) || m > n) ) continue;
                 for(int run = 0; run < runs; run++) func(mu, n, m, run);
             }
         }
     }
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << "ms\n";
 }
 
 std::tuple<int, T> get_optimal_solution(MachineSchedulingProblem problem, int m, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
@@ -57,6 +57,9 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
     write_to_file("", output_file, false);
 
     auto base_test = [alphas, output_file, max_processing_time, mutation_operator](int mu, int n, int m, int run) {
+
+        if(!is_viable_combination(mu, n, m)) return;
+
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
@@ -84,17 +87,15 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
         );
         write_to_file(createPopulationReport(mu1_unconst_pop, evaluate, diversity_value, "Mu1-unconst", mu, n, m) + "\n", output_file);
 
-        for(double alpha : alphas){
-            Population<T,L> noah_pop = noah(
-                seed, mu, n, m,
-                terminate_generations(500), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
-                OPT*(1+alpha), mu, 0.5*mu, 0.5*mu
-            );
-            write_to_file(createPopulationReport(noah_pop, evaluate, diversity_value, "Noah " + std::to_string(alpha), mu, n, m), output_file);
-        }
+        Population<T,L> noah_pop = noah(
+            seed, mu, n, m,
+            terminate_generations(500), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
+            mu, 0.5*mu, 0.5*mu
+        );
+        write_to_file(createPopulationReport(noah_pop, evaluate, diversity_value, "Noah", mu, n, m), output_file);
     };
 
-    loop_parameters(mus, ns, ms, runs, base_test, true);
+    loop_parameters(mus, ns, ms, runs, base_test);
 }   
 
 void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, int runs, std::string output_file, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
@@ -103,6 +104,9 @@ void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, std::vecto
     int max_processing_time = 50;
 
     auto mu1_optimization_test = [runs, output_file, max_processing_time, mutation_operator](int mu, int n, int m, int run) {
+
+        if(!is_viable_combination(mu, n, m)) return;
+
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
@@ -126,7 +130,7 @@ void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, std::vecto
         write_to_file(result_unopt, output_file);
     };
 
-    loop_parameters(mus, ns, ms, runs, mu1_optimization_test, true);
+    loop_parameters(mus, ns, ms, runs, mu1_optimization_test);
 }
 
 void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, std::string output_file, std::string algorithm, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
@@ -137,6 +141,9 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
     int max_processing_time = 50;
 
     auto algorithm_test = [output_file, max_processing_time, algorithm, mutation_operator, alphas, operator_string](int mu, int n, int m, int run) {
+
+        if(!is_viable_combination(mu, n, m)) return;
+
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
@@ -148,13 +155,13 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
                 initialize_random(mu, n, m), evaluate, mutation_operator, select_roulette(mu), select_mu(mu, evaluate),
                 300
             );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, algorithm, operator_string);
+            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, algorithm, operator_string);
         }else if(algorithm == "Mu1-unconst"){
             Population<T,L> population = mu1_unconstrained(
                 seed, m, n, mu,
                 terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, diversity_measure
             );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, algorithm, operator_string);
+            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, algorithm, operator_string);
         }else if(algorithm == "Mu1-const"){
             for(double alpha: alphas){
                 Population<T,L> population = mu1_constrained(
@@ -162,38 +169,38 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
                     terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, diversity_measure,
                     alpha, optimal_solution
                 );
-                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, algorithm, operator_string, alpha);
+                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, algorithm, operator_string, alpha);
             }
         }
         write_to_file(result, output_file);
     };
 
-    loop_parameters(mus, ns, ms, runs, algorithm_test, true);
+    loop_parameters(mus, ns, ms, runs, algorithm_test);
 }
 
-void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, double g_ratio, double r_ratio, double c_ratio, std::string output_file, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
+void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms,int runs, double g_ratio, double r_ratio, double c_ratio, std::string output_file, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
     
-    std::string header = "seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt,algorithm,mutation,alpha,g,r,c\n";
+    std::string header = "seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt,algorithm,mutation,g,r,c\n";
     write_to_file(header, output_file, false);
     int max_processing_time = 50;
 
-    auto noah_test = [output_file, max_processing_time, mutation_operator, operator_string, alphas, g_ratio, r_ratio, c_ratio](int mu, int n, int m, int run) {
+    auto noah_test = [output_file, max_processing_time, mutation_operator, operator_string, g_ratio, r_ratio, c_ratio](int mu, int n, int m, int run) {
+        
+        if(!is_viable_combination(mu, n, m)) return;
+        
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
         auto [OPT, optimal_solution] = get_optimal_solution(problem, m, evaluate);
         int g = g_ratio*mu, r = r_ratio*mu, c = c_ratio*mu;
-        std::string result;
-        for(double alpha: alphas){
-            Population<T,L> population = noah(
-                seed, mu, n, m, 
-                terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
-                OPT*(1+alpha), g, r, c
-            );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), evaluate({population.get_bests(false, evaluate)[0]})[0], OPT, "NOAH", operator_string, alpha, g, r, c);
-        }
+        Population<T,L> population = noah(
+            seed, mu, n, m, 
+            terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
+            g, r, c
+        );
+        std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "NOAH", operator_string, g, r, c);
         write_to_file(result, output_file);
     };
 
-    loop_parameters(mus, ns, ms, runs, noah_test, true);
+    loop_parameters(mus, ns, ms, runs, noah_test);
 }

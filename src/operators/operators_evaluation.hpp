@@ -42,7 +42,8 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_makespan(MachineSc
 */
 
 std::function<std::vector<L>(const std::vector<T>&)> evaluate_tardyjobs(MachineSchedulingProblem problem) { 
-    return [problem](const std::vector<T>& genes) -> std::vector<L> {
+    int n = problem.processing_times.size();
+    return [problem, n](const std::vector<T>& genes) -> std::vector<L> {
         std::vector<L> fitnesses(genes.size());
         std::transform(genes.begin(), genes.end(), fitnesses.begin(), [&](const T& gene) -> double {
             int tardy_jobs_n = 0;
@@ -55,7 +56,7 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_tardyjobs(MachineS
                     }
                 }
             }
-            return (double) ( (-1) * tardy_jobs_n);
+            return (double) ( n - tardy_jobs_n);
         });
         return fitnesses;
     };

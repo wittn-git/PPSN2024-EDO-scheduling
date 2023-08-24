@@ -15,6 +15,8 @@ protected:
     std::vector<T> genes;
     std::mt19937 generator;
     int generation;
+    T best_gene;
+    L best_fitness;
 
     // Function taking a vector of genes of type T and returning its fitness value vector of type L
     std::function<std::vector<L>(const std::vector<T>&)>& evaluate;
@@ -28,6 +30,7 @@ protected:
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors;
 
     std::string gene_to_string(T gene);
+    void compare_best(std::vector<L> fitnesses);
 
 public:
 
@@ -48,7 +51,9 @@ public:
     //executes one iteration of the evolutionary algorithm
     virtual void execute();   
     //executes iterations of the evolutionary algorithm until the termination criterion is met                                              
-    virtual void execute(std::function<bool(Population<T,L>&)> termination_criterion);                         
+    virtual void execute(std::function<bool(Population<T,L>&)> termination_criterion);   
+    //get maximum fitness value over the course of the algorithm
+    L get_best_fitness();                 
     //returns the best genes in the population, using the given evaluate function
     std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate);       
     //returns the current genes in the population           
@@ -62,8 +67,8 @@ public:
     //returns a string representation of the population                 
     std::string to_string(bool keep_duplicates);                         
     //returns a string representation of the best genes in the population, using the given evaluate function
-    std::string bests_to_string(std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                     
-    
+    std::string bests_to_string(std::function<std::vector<L>(const std::vector<T>&)>& evaluate);     
+                
     // setters of the operator functions
     void set_evaluate(const std::function<std::vector<L>(const std::vector<T>&)>& evaluate);
     void set_selectParents(const std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)>& selectParents);
@@ -87,6 +92,8 @@ Population<T, L>::Population(
     assert(initialize != nullptr && "initialize function must be set");
     genes = initialize(generator);
     assert(genes.size() > 0 && "initialize function must return a non-empty vector");
+    best_gene = T();
+    best_fitness = -std::numeric_limits<L>::max();
 }
 
 template <typename T, typename L>
@@ -96,6 +103,7 @@ template <typename T, typename L>
 void Population<T, L>::execute() {
     generation++;
     std::vector<L> fitnesses = (evaluate == nullptr) ? std::vector<L>(0) : evaluate(genes);
+    if(evaluate != nullptr) compare_best(fitnesses);
     assert(evaluate == nullptr || fitnesses.size() == genes.size());
     std::vector<T> parents = (selectParents == nullptr) ? genes : selectParents(genes, fitnesses, generator);
     std::vector<T> children = (recombine == nullptr) ? parents : recombine(parents, generator);
@@ -127,6 +135,11 @@ std::vector<T> Population<T, L>::get_bests(bool keep_duplicats, std::function<st
     std::sort(bests.begin(), bests.end());
     bests.erase(std::unique(bests.begin(), bests.end()), bests.end());
     return bests;
+}
+
+template <typename T, typename L>
+L Population<T, L>::get_best_fitness(){
+    return best_fitness;
 }
 
 template <typename T, typename L>
@@ -166,6 +179,15 @@ std::string Population<T, L>::gene_to_string(T gene){
     }
     s += "\n";
     return s;
+}
+
+template <typename T, typename L>
+void Population<T, L>::compare_best(std::vector<L> fitnesses){
+    auto max_it = std::max_element(fitnesses.begin(), fitnesses.end());
+    if(*max_it > best_fitness){
+        best_fitness = *max_it;
+        best_gene = genes[std::distance(fitnesses.begin(), max_it)];
+    }
 }
 
 template <typename T, typename L>

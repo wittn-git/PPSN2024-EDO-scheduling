@@ -65,6 +65,7 @@ template <typename T, typename L>
 void Population_Mu1<T, L>::execute() {
     this->generation++;
     std::vector<L> fitnesses = (this->evaluate == nullptr) ? std::vector<L>(0) : this->evaluate(this->genes);
+    if(this->evaluate != nullptr) this->compare_best(fitnesses);
     assert(this->evaluate == nullptr || fitnesses.size() == this->genes.size());
     std::vector<T> parents = (this->selectParents == nullptr) ? this->genes : this->selectParents(this->genes, fitnesses, this->generator);
     std::vector<T> children = (this->recombine == nullptr) ? parents : this->recombine(parents, this->generator);
