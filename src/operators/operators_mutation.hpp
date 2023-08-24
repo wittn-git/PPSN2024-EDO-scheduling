@@ -38,7 +38,6 @@ T remove_and_insert(const T& gene, std::mt19937& generator){
 
 std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_removeinsert(double mutation_rate) {
     return [mutation_rate](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
-        std::cout << "c";
         std::vector<T> mutated_genes(genes.size());
         std::uniform_real_distribution< double > distribute_rate(0, 1);
         std::transform(genes.begin(), genes.end(), mutated_genes.begin(), [mutation_rate, &generator, distribute_rate](const T& gene) mutable -> T {
@@ -116,22 +115,30 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_neigh
 
 std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bound(std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator, std::function<std::vector<L>(const std::vector<T>&)> evaluate, double bound, int mu){
     return [mutation_operator, evaluate, bound, mu](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
-        std::cout << "b";
-        mutation_operator(genes, generator);
         std::vector<T> offspring;
         std::uniform_int_distribution< int > distribute_parent(0, genes.size() - 1);
+        int n = std::accumulate(genes[0].begin(), genes[0].end(), 0, [](int a, const std::vector<int>& b){return a + b.size();});
+        int iteration = 0;
         while(offspring.size() < mu){
+            iteration++;
             std::vector<T> parents;
             for(int i = 0; i < mu - offspring.size(); i++){
                 parents.emplace_back(genes[distribute_parent(generator)]);
             }
-            std::cout << "p";
             std::vector<T> mutated_genes = mutation_operator(parents, generator);
             std::vector<L> fitnesses = evaluate(mutated_genes);
             for(int i = 0; i < mutated_genes.size(); i++){
                 if(bound <= fitnesses[i]){
                     offspring.emplace_back(mutated_genes[i]);
+                    iteration = 0;
+                    if(offspring.size() == mu){
+                        return offspring;
+                    }
                 }
+            }
+            if(iteration > 20*n){
+                offspring.emplace_back(genes[distribute_parent(generator)]);
+                iteration = 0;
             }
         }
         return offspring;
