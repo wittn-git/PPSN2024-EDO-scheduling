@@ -9,8 +9,8 @@ start_job() {
     rm temp_job.sh
 }
 
-if [ "$#" -ne 10 ]; then
-    echo "Usage: $0 <walltime> <algorithm> <mutation_operator> <runs> <mus> <ns> <ms> <alphas> <lambdas> <cores>"
+if [ "$#" -ne 9 ]; then
+    echo "Usage: $0 <walltime> <algorithm> <mutation_operator> <runs> <mus> <ns> <ms> <alphas> <lambdas>"
     exit 1
 fi
 
