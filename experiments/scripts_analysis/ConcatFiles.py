@@ -23,7 +23,7 @@ def process_files(prefix, input_folder, outputfile):
 if(__name__ == "__main__"):
 
     if len(sys.argv) < 4:
-        print("Usage: python3 AnalyzeData.py <input_folder> <prefix> <output_file_name>")
+        print("Usage: python3 ConcatFiles.py <input_folder> <prefix> <output_file_name>")
         exit(1)
 
     input_folder = sys.argv[1]

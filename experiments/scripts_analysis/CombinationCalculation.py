@@ -55,7 +55,7 @@ def print_missing_combinations(input_files, grouping_columns, runs):
 if __name__ == '__main__':
 
     if len(sys.argv) < 4:
-        print("Usage: python3 AnalyzeData.py <input_file> <grouping_columns> <runs>")
+        print("Usage: python3 CombinationCalculation.py <input_file> <grouping_columns> <runs>")
         exit(1)
 
     input_files = sys.argv[1].split(",")
