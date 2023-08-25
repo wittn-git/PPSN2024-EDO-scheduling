@@ -1,6 +1,6 @@
 import pandas as pd
 
-def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, include_entries=[], footnotesize=True):
+def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, include_entries=[], scriptsize=True):
     dataframes = [pd.read_csv(file) for file in csv_file]
 
     for df in dataframes:
@@ -22,7 +22,7 @@ def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes
     latex_table = "\\begin{center}\n"
     latex_table += "\\renewcommand{\\tabcolsep}{4pt}\n"
     latex_table += " \\renewcommand{\\arraystretch}{1.1}\n"
-    if footnotesize: latex_table += " \\begin{footnotesize}\n"
+    if scriptsize: latex_table += " \\begin{scriptsize}\n"
     latex_table += f" \\begin{{{'tabular'}}}{{{'r'*(len(grouping_attributes)+len(ungrouped_header) * len(dataframes))}}}\n"
     latex_table += " \\toprule\n"
     latex_table += f"\multicolumn{{{len(grouping_header)}}}{{{'c'}}}{{{''}}}" 
@@ -43,17 +43,13 @@ def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes
             occurence_dict[",".join(keys)] = row[-1]
 
     currents = {attr: -1 for attr in grouping_attributes}
-    # TODO fix inclusion of not existing attributes
 
-    for rows in zip(*[df.iterrows() for df in dataframes]):
-        first_row = rows[0][1]
+    for row in dataframes[0].iterrows():
+        first_row = row[1]
         columns = []
         new_group = False
         for attribute in actual_header:
-            if(attribute not in currents):
-                for row in rows:
-                    columns.append(row[1][attribute])
-                continue
+            if(attribute not in currents): continue
             if(currents[attribute] == -1 or currents[attribute] != first_row[attribute] or new_group):
                 if(not new_group): 
                     new_group = True
@@ -66,11 +62,22 @@ def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes
                     if(attr == attribute): break
                 columns.append(f"\multirow{{{occurence_dict[','.join(occ_keys)]}}}{{{'*'}}}{{{first_row[attribute]}}}") 
             else: columns.append("")
+        for df in dataframes:
+            for attribute in actual_header: 
+                if(attribute not in currents):
+                    row_ = df
+                    for attr, val in currents.items():
+                        row_ = row_[row_[attr] == val]
+                    if(row_.empty): 
+                        columns.append("---")
+                    else:
+                        columns.append(row_[attribute].values[0])
+
         latex_table += " & ".join(columns) + "\\\\ \n"
     
     latex_table += " \\bottomrule\n"
     latex_table += "  \end{tabular}\n"
-    if footnotesize: latex_table += " \end{footnotesize}\n"
+    if scriptsize: latex_table += " \end{scriptsize}\n"
     latex_table += " \end{center}\n"
     return latex_table
 
@@ -80,17 +87,17 @@ if __name__ == "__main__":
     
     csv_files = [
         "results/out_Mu1-const_1RAI_summary.csv", 
+        "results/out_Mu1-const_NSWAP_summary.csv",
         "results/out_Mu1-const_XRAI_0.000000_summary.csv",
         "results/out_Mu1-const_XRAI_0.250000_summary.csv",
-        "results/out_Mu1-const_XRAI_1.000000_summary.csv",
-        "results/out_Mu1-const_NSWAP_summary.csv",
+        "results/out_Mu1-const_XRAI_1.000000_summary.csv"        
     ]
     upper_header = ["$NSWAP$", "$1(R+I)$", "$X(R+I), \lambda = 0.00$", "$X(R+I), \lambda = 0.25$", "$X(R+I), \lambda = 1.00$"]
-    header = ["$\mu$", "$n$", "$m$", "$\\alpha$", "$D_0$", "$OBJ$", "$OPT$", "$>\%$"]
-    columns = ['mu', 'n', 'm', 'alpha', 'diversity', 'fitness', 'opt', 'fitness_worse_than_opt']
+    header = ["$\mu$", "$n$", "$m$", "$\\alpha$", "$D_0$", "$OBJ$", "$OPT$"]
+    columns = ['mu', 'n', 'm', 'alpha', 'diversity', 'fitness', 'opt']
     grouping = ['mu', 'n', 'm', 'alpha']
     grouping_header = ["$\mu$", "$n$", "$m$", "$\\alpha$"]
-    decimal_columns = ['diversity', 'fitness', 'alpha', 'opt', 'fitness_worse_than_opt']
+    decimal_columns = ['diversity', 'fitness', 'alpha', 'opt']
     #include_entries = [2,3,5,9,11,12,16,17,31,32,33,62,63,72,73,101]
     
     latex_table = read_csv_to_latex(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, [], True)
