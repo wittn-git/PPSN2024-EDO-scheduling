@@ -34,7 +34,7 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         std::vector<int> indices(combined.size());
         std::iota(indices.begin(), indices.end(), 0);
         std::partial_sort(indices.begin(), indices.begin() + mu, indices.end(), [&](int a, int b) {
-            return fitnesses[a] > fitnesses[b];
+            return fitnesses[a] < fitnesses[b];
         });
         for (int i = 0; i < mu; i++) {
             selected_genes[i] = combined[indices[i]];
@@ -92,7 +92,7 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
 };
 
 /*
-    qdiv-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and offspring, if quality of offspring is at least OPT * alpha
+    qdiv-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and offspring, if quality of offspring is at least alpha * ( n - OPT ) + OPT)
     Arguments:
         - alpha:                parameter for quality threshold
         - OPT:                  fitness value of optimal solution
@@ -100,10 +100,10 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         - evaluate:             function taking a vector of genes and returning a vector of fitnesses
 */
 
-std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_qdiv(double alpha, double OPT, std::function<double(const T&, const T&)> diversity_measure, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
-    return [alpha, OPT, diversity_measure, evaluate](const std::vector<T>& parents, const std::vector<L>& fitnesses_parents, const std::vector<T>& offspring, std::mt19937& generator) -> std::vector<T> {
+std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> select_qdiv(double alpha, int n, double OPT, std::function<double(const T&, const T&)> diversity_measure, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
+    return [alpha, n, OPT, diversity_measure, evaluate](const std::vector<T>& parents, const std::vector<L>& fitnesses_parents, const std::vector<T>& offspring, std::mt19937& generator) -> std::vector<T> {
         assert(offspring.size() == 1);
-        if(evaluate(offspring)[0] < OPT * alpha) return parents;
+        if(evaluate(offspring)[0] > alpha * ( n - OPT ) + OPT) return parents;
         std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)> div = select_div(diversity_measure);
         return div(parents, {}, offspring, generator);
     };
@@ -124,7 +124,7 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         std::vector<L> fitnesses_offspring = evaluate(offspring);
         fitnesses.insert(fitnesses.end(), fitnesses_offspring.begin(), fitnesses_offspring.end());
         for(int i = 0; i < fitnesses.size(); i++){
-            if(fitnesses[i] < quality_bound){
+            if(fitnesses[i] > quality_bound){
                 combined.erase(combined.begin() + i);
                 fitnesses.erase(fitnesses.begin() + i);
                 i--;
@@ -135,7 +135,7 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const
         std::vector<int> indices(mu);
         std::iota(indices.begin(), indices.end(), 0);
         std::partial_sort(indices.begin(), indices.begin() + parents.size(), indices.end(), [&](int a, int b) {
-            return fitnesses[a] > fitnesses[b];
+            return fitnesses[a] < fitnesses[b];
         });
         for (int i = 0; i < mu; i++) {
             selected_genes[i] = combined[indices[i]];
@@ -208,17 +208,18 @@ std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Dive
 }
 
 /*
-    qpdiv-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and offspring, if quality of offspring is at least OPT * alpha, preserve diversity scores to improve runtime
+    qpdiv-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and offspring, if quality of offspring is at least alpha * ( n - OPT ) + OPT), preserve diversity scores to improve runtime
     Arguments:
         - alpha:                parameter for quality threshold
+        - n:                    number of jobs
         - OPT:                  fitness value of optimal solution
         - diversity_measure:    function taking two genes and returning a double representing the diversity
         - evaluate:             function taking a vector of genes and returning a vector of fitnesses
 */
 
-std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> select_qpdiv(double alpha, double OPT, std::function<double(const T&, const T&)> diversity_measure, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
-    return [alpha, OPT, diversity_measure, evaluate](const std::vector<T>& parents, const T& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
-        if(evaluate({offspring})[0] < OPT * alpha) return diversity_preserver;
+std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> select_qpdiv(double alpha, int n, double OPT, std::function<double(const T&, const T&)> diversity_measure, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
+    return [alpha, n, OPT, diversity_measure, evaluate](const std::vector<T>& parents, const T& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
+        if(evaluate({offspring})[0] > alpha * ( n - OPT ) + OPT) return diversity_preserver;
         std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> div = select_pdiv(diversity_measure);
         return div(parents, offspring, diversity_preserver, generator);
     };

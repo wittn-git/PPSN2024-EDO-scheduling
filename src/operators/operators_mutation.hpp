@@ -128,7 +128,7 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bound
             std::vector<T> mutated_genes = mutation_operator(parents, generator);
             std::vector<L> fitnesses = evaluate(mutated_genes);
             for(int i = 0; i < mutated_genes.size(); i++){
-                if(bound <= fitnesses[i]){
+                if(bound >= fitnesses[i]){
                     offspring.emplace_back(mutated_genes[i]);
                     iteration = 0;
                     if(offspring.size() == mu){

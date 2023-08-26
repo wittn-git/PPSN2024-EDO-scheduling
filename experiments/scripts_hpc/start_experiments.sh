@@ -7,7 +7,7 @@ runs="30"
 
 wall_time="7-00:00:00"
 
-alphas="0.95 0.8 0.5"
+alphas="0.1 0.3 0.6"
 lambdas="0.1 0.2 2" 
 
 ./start_experiment.sh $wall_time "Mu1-const" "1RAI" $runs $mus $ns $ms "$alphas" "-"

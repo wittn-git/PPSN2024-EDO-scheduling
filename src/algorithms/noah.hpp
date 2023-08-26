@@ -47,7 +47,7 @@ double bound_change(
 
     if(remaining_solutions_n > population.get_size(true)){
         population.set_genes(genes);
-        return *std::min_element(fitnesses.begin(), fitnesses.end());
+        return *std::max_element(fitnesses.begin(), fitnesses.end());
     }
 
     std::vector<int> indices(genes.size());

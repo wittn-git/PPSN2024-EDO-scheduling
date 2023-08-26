@@ -63,10 +63,10 @@ std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::
                 int rand_index = distribute_point(generator);
                 tournament_genes[i] = rand_index;
             }
-            auto max_it = std::max_element(tournament_genes.begin(), tournament_genes.end(), [&](int a, int b) {
+            auto min_it = std::min_element(tournament_genes.begin(), tournament_genes.end(), [&](int a, int b) {
                 return fitnesses[a] < fitnesses[b];
             });
-            return genes[*max_it];
+            return genes[*min_it];
         });
         return selected_genes;
     };

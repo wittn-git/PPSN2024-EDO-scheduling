@@ -93,7 +93,7 @@ Population<T, L>::Population(
     genes = initialize(generator);
     assert(genes.size() > 0 && "initialize function must return a non-empty vector");
     best_gene = T();
-    best_fitness = -std::numeric_limits<L>::max();
+    best_fitness = std::numeric_limits<L>::max();
 }
 
 template <typename T, typename L>
@@ -123,9 +123,9 @@ template <typename T, typename L>
 std::vector<T> Population<T, L>::get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate){
     std::vector<T> bests;
     std::vector<L> fitnesses = evaluate(genes);
-    auto max_it = std::max_element(fitnesses.begin(), fitnesses.end());
+    auto min_it = std::min_element(fitnesses.begin(), fitnesses.end());
     for(int i = 0; i < genes.size(); i++){
-        if(fitnesses[i] == *max_it){
+        if(fitnesses[i] == *min_it){
             bests.emplace_back(genes[i]);
         }
     }
@@ -183,10 +183,10 @@ std::string Population<T, L>::gene_to_string(T gene){
 
 template <typename T, typename L>
 void Population<T, L>::compare_best(std::vector<L> fitnesses){
-    auto max_it = std::max_element(fitnesses.begin(), fitnesses.end());
-    if(*max_it > best_fitness){
-        best_fitness = *max_it;
-        best_gene = genes[std::distance(fitnesses.begin(), max_it)];
+    auto min_it = std::min_element(fitnesses.begin(), fitnesses.end());
+    if(*min_it <= best_fitness){
+        best_fitness = *min_it;
+        best_gene = genes[std::distance(fitnesses.begin(), min_it)];
     }
 }
 

@@ -58,8 +58,6 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
 
     auto base_test = [alphas, output_file, max_processing_time, mutation_operator](int mu, int n, int m, int run) {
 
-        if(!is_viable_combination(mu, n, m)) return;
-
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
@@ -70,7 +68,7 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
             initialize_random(mu, n, m), evaluate, mutation_operator, select_roulette(mu), select_mu(mu, evaluate),
             300
         );
-        write_to_file(createPopulationReport(simple_pop, evaluate, diversity_value, "Simple", mu, n, m) + "\n", output_file);
+        write_to_file(createPopulationReport(simple_pop, evaluate, diversity_value, "Simple", mu, n, m, OPT) + "\n", output_file);
         
         for(double alpha : alphas){
             Population<T,L>  mu1_const_pop = mu1_constrained(
@@ -78,21 +76,21 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
                 terminate_generations(2500), evaluate, mutation_operator, diversity_measure,
                 alpha, optimal_solution
             );
-            write_to_file(createPopulationReport(mu1_const_pop, evaluate, diversity_value, "Mu1-const " + std::to_string(alpha), mu, n, m) + "\n", output_file);
+            write_to_file(createPopulationReport(mu1_const_pop, evaluate, diversity_value, "Mu1-const " + std::to_string(alpha), mu, n, m, OPT) + "\n", output_file);
         }
         
         Population<T,L>  mu1_unconst_pop = mu1_unconstrained(
             seed, m, n, mu,
             terminate_generations(2500), evaluate, mutation_operator, diversity_measure
         );
-        write_to_file(createPopulationReport(mu1_unconst_pop, evaluate, diversity_value, "Mu1-unconst", mu, n, m) + "\n", output_file);
+        write_to_file(createPopulationReport(mu1_unconst_pop, evaluate, diversity_value, "Mu1-unconst", mu, n, m, OPT) + "\n", output_file);
 
         Population<T,L> noah_pop = noah(
             seed, mu, n, m,
             terminate_generations(500), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
             mu, 0.5*mu, 0.5*mu
         );
-        write_to_file(createPopulationReport(noah_pop, evaluate, diversity_value, "Noah", mu, n, m), output_file);
+        write_to_file(createPopulationReport(noah_pop, evaluate, diversity_value, "Noah", mu, n, m, OPT), output_file);
     };
 
     loop_parameters(mus, ns, ms, runs, base_test);

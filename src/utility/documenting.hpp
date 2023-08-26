@@ -33,7 +33,7 @@ std::string createPopulationReport(
     std::function<std::vector<L>(const std::vector<T>&)> evaluate,
     std::function<double(const std::vector<T>&)> diversity_value,
     std::string algorithm_name,
-    int mu, int n, int m
+    int mu, int n, int m, double OPT
 ){
 
     std::vector<T> bests = population.get_bests(false, evaluate);
@@ -48,6 +48,7 @@ std::string createPopulationReport(
     output += "Unique individuals: " + std::to_string(population.get_size(false)) + "\n";
     output +=  "Number of unique best individuals: " + std::to_string(bests.size()) + "\n";
     output += "Best fitness: " + std::to_string(fitnesses__bests[0]) + "\n";
+    output += "Optimal fitness: " + std::to_string(OPT) + "\n";
 
     return output;
 }

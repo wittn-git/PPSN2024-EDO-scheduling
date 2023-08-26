@@ -28,7 +28,7 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_makespan(MachineSc
                 }
                 end_points.emplace_back(current_time);
             }
-            return (double) (-(1) * *std::max_element(end_points.begin(), end_points.end()));
+            return (double) (*std::max_element(end_points.begin(), end_points.end()));
         });
         return fitnesses;
     };
@@ -56,7 +56,7 @@ std::function<std::vector<L>(const std::vector<T>&)> evaluate_tardyjobs(MachineS
                     }
                 }
             }
-            return (double) ( n - tardy_jobs_n);
+            return (double) tardy_jobs_n;
         });
         return fitnesses;
     };
