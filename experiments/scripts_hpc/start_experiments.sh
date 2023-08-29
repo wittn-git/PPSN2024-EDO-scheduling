@@ -10,16 +10,25 @@ wall_time="7-00:00:00"
 alphas="0.1 0.3 0.6"
 lambdas="0.1 0.2 2" 
 
-./start_experiment.sh $wall_time "Mu1-const" "1RAI" $runs $mus $ns $ms "$alphas" "-"
-./start_experiment.sh $wall_time "Mu1-const" "XRAI" $runs $mus $ns $ms "$alphas" "$lambdas"
-./start_experiment.sh $wall_time "Mu1-const" "NSWAP" $runs $mus $ns "1" "$alphas" "-"
+algorithms=("Mu1-const" "Mu1-unconst" "NOAH")
+mutation_operators=("1RAI" "XRAI" "NSWAP")
 
-./start_experiment.sh $wall_time "Mu1-unconst" "1RAI" $runs $mus $ns $ms "-" "-"
-./start_experiment.sh $wall_time "Mu1-unconst" "XRAI" $runs $mus $ns $ms "-" "$lambdas"
-./start_experiment.sh $wall_time "Mu1-unconst" "NSWAP" $runs $mus $ns "1" "-" "-"
-
-./start_experiment.sh $wall_time "NOAH" "1RAI" $runs $mus $ns $ms "-" "-"
-./start_experiment.sh $wall_time "NOAH" "XRAI" $runs $mus $ns $ms "-" "$lambdas"
-./start_experiment.sh $wall_time "NOAH" "NSWAP" $runs $mus $ns "1" "-" "-"
+for algorithm in "${algorithms[@]}"; do
+    if [ "$algorithm" == "Mu1-const" ]; then
+        current_alpha="$alphas"
+    else
+        current_alpha="-"
+    fi
+    for mutation_operator in "${mutation_operators[@]}"; do
+        current_lambdas="-"
+        current_ms="$ms"
+        if [ "$mutation_operator" == "1RAI" ]; then
+            current_lambdas="$lambdas"
+        elif [ "$mutation_operator" == "NSWAP" ]; then
+            current_ms="1"
+        fi
+        ./start_experiment.sh "$wall_time" "$algorithm" "$mutation_operator" "$runs" "$mus" "$ns" "$current_ms" "$current_alpha" "$current_lambdas"
+    done
+done
 
 ./start_experiment.sh "0-01:00:00" "Survivor-Opt" "1RAI" "30" "10,25" "40" "1" "-" "-"
