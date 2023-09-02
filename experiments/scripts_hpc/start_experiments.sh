@@ -22,7 +22,7 @@ for algorithm in "${algorithms[@]}"; do
     for mutation_operator in "${mutation_operators[@]}"; do
         current_lambdas="-"
         current_ms="$ms"
-        if [ "$mutation_operator" == "1RAI" ]; then
+        if [ "$mutation_operator" == "XRAI" ]; then
             current_lambdas="$lambdas"
         elif [ "$mutation_operator" == "NSWAP" ]; then
             current_ms="1"
