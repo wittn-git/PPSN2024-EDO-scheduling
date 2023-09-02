@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#SBATCH --account=thes1549
+
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH --mem-per-cpu=50M
