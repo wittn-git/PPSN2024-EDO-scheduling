@@ -16,19 +16,30 @@
 
 int main(int argc, char **argv){
 
-    auto [experiment_type, mutation_operator, output_file, mus, ns, ms, alphas, runs, operator_string] = parse_arguments(argc, argv);
-
-    if(experiment_type == "Mu1-const" || experiment_type == "Mu1-unconst" || experiment_type == "Simple"){
-        test_algorithm(mus, ns, ms, alphas, runs, output_file, experiment_type, operator_string, mutation_operator);
-    }else if(experiment_type == "Base"){
-        test_base(mus, ns, ms, alphas, runs, output_file, mutation_operator);
-    }else if(experiment_type == "Survivor-Opt"){
-        test_mu1_optimization(mus, ns, ms, runs, output_file, mutation_operator);
-    }else if(experiment_type == "NOAH"){
-        test_noah(mus, ns, ms, runs, 1, 0.5, 0.5, output_file, operator_string, mutation_operator);
-    }else{
-        throw std::invalid_argument("Invalid experiment type.");
+    if(argc != 4){
+        std::cout << "Usage: " << argv[0] << " <mu> <n> <m>" << std::endl;
+        return 1;
     }
+
+    int mu = std::stoi(argv[1]);
+    int n = std::stoi(argv[2]);
+    int m = std::stoi(argv[3]);
+    int seed = n * m * mu;
+
+    MachineSchedulingProblem problem = get_problem(seed, n, 50);
+    auto evaluate = evaluate_tardyjobs(problem);
+    auto mutation_operator = mutate_removeinsert(1);
+    auto diversity_measure = diversity_DFM();
+
+    std::ofstream file;
+    file.open("output_componenttimes.txt", std::ios_base::out | std::ios_base::trunc);
+    file << "mu=" << mu << " n=" << n << " m=" << m << std::endl;
+    file.close();
+
+    Population<T,L>  unopt_pop = mu1_unconstrained_unoptimized(
+        n*mu*m, 1, n, mu,
+        terminate_generations(100), evaluate, mutation_operator, diversity_measure
+    );
 
     return 0;
 }

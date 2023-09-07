@@ -4,6 +4,7 @@
 #include <functional>
 #include <random>
 #include <assert.h>
+#include <chrono>
 
 // Class Outline ----------------------------------------------------------------------------------------------------------------------------
 
@@ -101,15 +102,29 @@ Population<T, L>::Population(){};
 
 template <typename T, typename L>
 void Population<T, L>::execute() {
+    std::ofstream file;
+    file.open("output_componenttimes.txt", std::ios_base::out | std::ios_base::app);
     generation++;
+    auto start = std::chrono::high_resolution_clock::now();
     std::vector<L> fitnesses = (evaluate == nullptr) ? std::vector<L>(0) : evaluate(genes);
+    auto end = std::chrono::high_resolution_clock::now();
+    file << "evaluate, " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << std::endl;
     if(evaluate != nullptr) compare_best(fitnesses);
     assert(evaluate == nullptr || fitnesses.size() == genes.size());
+    start = std::chrono::high_resolution_clock::now();
     std::vector<T> parents = (selectParents == nullptr) ? genes : selectParents(genes, fitnesses, generator);
+    end = std::chrono::high_resolution_clock::now();
+    file << "selectParents, " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << std::endl;
     std::vector<T> children = (recombine == nullptr) ? parents : recombine(parents, generator);
-    mutate(children, generator);
+    start = std::chrono::high_resolution_clock::now();
     children = (mutate == nullptr) ? children : mutate(children, generator);
+    end = std::chrono::high_resolution_clock::now();
+    file << "mutate, " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << std::endl;
+    start = std::chrono::high_resolution_clock::now();
     genes = (selectSurvivors == nullptr) ? children : selectSurvivors(genes, fitnesses, children, generator);
+    end = std::chrono::high_resolution_clock::now();
+    file << "selectSurvivors, " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << std::endl;
+    file.close();
 }
 
 template <typename T, typename L>
