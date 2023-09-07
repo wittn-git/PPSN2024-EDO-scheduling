@@ -24,22 +24,25 @@ times = {
 }
 
 def iterate_combinations(with_alphas, with_nswap):
-    count = 0
+    count_time, count_combinations = 0, 0
     for mu in mus:
         for n in ns:
             for m in ms:
                 if(m >= n or (mu > (n*n - n)/(n-m))): continue
                 if(with_nswap and m > 1): continue
                 current_count = runs * times[(mu,n)] * mu * n * n
-                if(with_alphas): current_count *= 3
-                count += current_count
-    return count
+                count_combinations += 1
+                if(with_alphas): 
+                    current_count *= 3
+                    count_combinations += 2
+                count_time += current_count
+    return count_time, count_combinations
 
 combinations = {
-    (False, False): iterate_combinations(False, False) * 8,
-    (False, True): iterate_combinations(False, True) * 2,
-    (True, False): iterate_combinations(True, False) * 4,
-    (True, True): iterate_combinations(True, True) * 1
+    (False, False): iterate_combinations(False, False)[0] * 8,
+    (False, True): iterate_combinations(False, True)[0] * 2,
+    (True, False): iterate_combinations(True, False)[0] * 4,
+    (True, True): iterate_combinations(True, True)[0] * 1
 }
 
 def to_days(nanoseconds):
@@ -48,7 +51,9 @@ def to_days(nanoseconds):
 total_time = to_days(sum(combinations.values()))
 print(f"Total time: {total_time} days")
 
-print("Time per combination:")
+print("Time / iterations per combination:")
 for key in combinations.keys():
-    time = to_days(iterate_combinations(key[0], key[1]))
+    res = iterate_combinations(key[0], key[1])
+    time = to_days(res[0])
     print(f"NSWAP = {key[1]}, alphas = {key[0]}: {time} days")
+    print(str(res[1]) + " combinations per run")
