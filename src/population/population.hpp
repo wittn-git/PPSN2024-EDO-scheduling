@@ -107,7 +107,6 @@ void Population<T, L>::execute() {
     assert(evaluate == nullptr || fitnesses.size() == genes.size());
     std::vector<T> parents = (selectParents == nullptr) ? genes : selectParents(genes, fitnesses, generator);
     std::vector<T> children = (recombine == nullptr) ? parents : recombine(parents, generator);
-    mutate(children, generator);
     children = (mutate == nullptr) ? children : mutate(children, generator);
     genes = (selectSurvivors == nullptr) ? children : selectSurvivors(genes, fitnesses, children, generator);
 }
