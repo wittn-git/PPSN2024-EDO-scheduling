@@ -4,6 +4,16 @@
 #include <functional>
 #include <random>
 #include <assert.h>
+#include <map>
+#include <tuple>
+
+template <typename T>
+struct Diversity_Preserver {
+    int index;
+    bool first;
+    std::map<std::tuple<int, int>, double> diversity_scores;
+    std::vector<T> genes;
+};
 
 // Class Outline ----------------------------------------------------------------------------------------------------------------------------
 

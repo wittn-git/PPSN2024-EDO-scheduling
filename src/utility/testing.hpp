@@ -191,11 +191,14 @@ void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms,in
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
         auto [OPT, optimal_solution] = get_optimal_solution(problem, m, evaluate);
         int g = g_ratio*mu, r = r_ratio*mu, c = c_ratio*mu;
-        Population<T,L> population = noah(
+        auto start = std::chrono::high_resolution_clock::now();
+        auto population = noah(
             seed, mu, n, m, 
             terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
             g, r, c
         );
+        auto stop = std::chrono::high_resolution_clock::now();
+        std::cout << std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()) + "ms, " + std::to_string(population.get_generation()) + " generations" << std::endl;
         std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "NOAH", operator_string, g, r, c);
         write_to_file(result, output_file);
     };

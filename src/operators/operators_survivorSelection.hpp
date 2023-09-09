@@ -216,7 +216,6 @@ std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Dive
         - diversity_measure:    function taking two genes and returning a double representing the diversity
         - evaluate:             function taking a vector of genes and returning a vector of fitnesses
 */
-
 std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Diversity_Preserver<T>&, std::mt19937&)> select_qpdiv(double alpha, int n, double OPT, std::function<double(const T&, const T&)> diversity_measure, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
     return [alpha, n, OPT, diversity_measure, evaluate](const std::vector<T>& parents, const T& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
         if(evaluate({offspring})[0] > alpha * ( n - OPT ) + OPT) return diversity_preserver;
@@ -224,3 +223,29 @@ std::function<Diversity_Preserver<T>(const std::vector<T>&, const T&, const Dive
         return div(parents, offspring, diversity_preserver, generator);
     };
 };
+/*
+    pmu-Selection: Selects the mu (=parent size) individuals with the highest fitness from the combined population of parents and offspring
+    Arguments:
+        - mu:       number of individuals to select
+        - evaluate: function taking a vector of genes and returning a vector of fitnesses
+*/
+
+std::function<Diversity_Preserver<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, const Diversity_Preserver<T>&, std::mt19937&)> select_pmu(int mu, std::function<std::vector<L>(const std::vector<T>&)> evaluate) {
+    auto select = select_mu(mu, evaluate);
+    return [select](const std::vector<T>& parents, const std::vector<L>& fitnesses, const std::vector<T>& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
+        std::vector<T> genes = select(parents, fitnesses, offspring, generator);
+        return { 0, true, std::map<std::tuple<int, int>, double>(), genes };
+    };
+}
+
+/*
+    npdiv-Selection: pdiv-Selection: Selects the mu (=parent size) individuals with the highest diversity from the combined population of parents and one offspring, preserve diversity scores to improve runtime, tailored for noa algorithm
+    Arguments
+        - diversity_measure:    function taking two genes and returning a double representing the diversity
+*/
+std::function<Diversity_Preserver<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, const Diversity_Preserver<T>&, std::mt19937&)> select_npdiv(std::function<double(const T&, const T&)> diversity_measure) {
+    auto select = select_pdiv(diversity_measure);
+    return [select](const std::vector<T>& parents, const std::vector<L>& fitnesses, const std::vector<T>& offspring, const Diversity_Preserver<T>& diversity_preserver, std::mt19937& generator) -> Diversity_Preserver<T> {
+        return select(parents, offspring[0], diversity_preserver, generator);
+    };
+}

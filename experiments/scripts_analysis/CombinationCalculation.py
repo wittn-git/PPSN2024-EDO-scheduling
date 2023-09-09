@@ -4,7 +4,7 @@ import pandas as pd
 mus = [2,10,25,50]
 ns = [5,10,25,50,100]
 ms = [1,3,5,10]
-alphas = [0.2,0.5,1]
+alphas = [0.1,0.3,0.6]
 
 def iterate_combinations(df, with_alphas, with_nswap, runs):
     count, count_missing = 0, 0
