@@ -68,18 +68,17 @@ def make_plot(mu, n, output_folder):
     X = np.arange(0, maximum_DFs+1)
     plt.figure()
     
-    cmap = plt.get_cmap("tab10")
     colors = [
-        cmap.colors[4],
-        cmap.colors[1],
-        cmap.colors[2],
-        cmap.colors[3],
+        "#BA55D3",
+        "#7B68EE",
+        "#B0E0E6",
+        "#C71585",
     ]
 
     for i, color_ in enumerate(colors):
         Y = [generate_artifical_vector(mu, x, i, n-1) for x in X]
         print(Y[100])
-        plt.plot(X, Y, label='Balance-Level {}'.format(i), color=color_)
+        plt.plot(X, Y, label='Balance-Level {}'.format(i), color=color_, alpha=0.65, linewidth=1)
 
     plt.xlabel('Number of Duplicate Directly-Follows Relations')
     plt.ylabel('Population Diversity ')

@@ -115,7 +115,7 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_neigh
 
 std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bound(std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator, std::function<std::vector<L>(const std::vector<T>&)> evaluate, double bound){
     return [mutation_operator, evaluate, bound](const std::vector<T>& genes, std::mt19937& generator) -> std::vector<T> {
-        return mutation_operator(genes, generator); //TODO Ask what to do about this
+        //return mutation_operator(genes, generator); //TODO Ask what to do about this
         std::vector<T> offspring;
         std::uniform_int_distribution< int > distribute_parent(0, genes.size() - 1);
         int n = std::accumulate(genes[0].begin(), genes[0].end(), 0, [](int a, const std::vector<int>& b){return a + b.size();});
@@ -137,7 +137,7 @@ std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutate_bound
                     }
                 }
             }
-            if(iteration > n*20){
+            if(iteration > n){
                 offspring.emplace_back(genes[distribute_parent(generator)]);
                 iteration = 0;
             }

@@ -31,4 +31,6 @@ for algorithm in "${algorithms[@]}"; do
     done
 done
 
-./start_experiment.sh "0-01:00:00" "Survivor-Opt" "1RAI" "30" "10,25" "40" "1" "-" "-"
+./start_experiment.sh "0-01:00:00" "Survivor-Opt" "1RAI" "30" "10,25" "30,40" "1" "-" "-"
+
+#TODO make Trajectory Tests
