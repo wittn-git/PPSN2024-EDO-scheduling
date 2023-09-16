@@ -3,7 +3,7 @@
 
 /*
     Parameters (in order):
-        - Algorithm: {"Mu1-const", "Mu1-unconst", "Simple", "Base", "Survivor-Opt", "NOAH"}
+        - Algorithm: {"Mu1-const", "Mu1-unconst", "NOAH"}
         - Mutation-Operator: {"1RAI", "XRAI", "NSWAP"}
         - Output-File: String
         - runs: Int
@@ -18,12 +18,8 @@ int main(int argc, char **argv){
 
     auto [experiment_type, mutation_operator, output_file, mus, ns, ms, alphas, runs, operator_string] = parse_arguments(argc, argv);
 
-    if(experiment_type == "Mu1-const" || experiment_type == "Mu1-unconst" || experiment_type == "Simple"){
+    if(experiment_type == "Mu1-const" || experiment_type == "Mu1-unconst"){
         test_algorithm(mus, ns, ms, alphas, runs, output_file, experiment_type, operator_string, mutation_operator);
-    }else if(experiment_type == "Base"){
-        test_base(mus, ns, ms, alphas, runs, output_file, mutation_operator);
-    }else if(experiment_type == "Survivor-Opt"){
-        test_mu1_optimization(mus, ns, ms, runs, output_file, mutation_operator);
     }else if(experiment_type == "NOAH"){
         test_noah(mus, ns, ms, runs, 1, 0.5, 0.5, output_file, operator_string, mutation_operator);
     }else{

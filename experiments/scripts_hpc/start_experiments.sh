@@ -1,7 +1,7 @@
 #!/bin/bash
 
-ns="5,10,25,50,100"
-mus="2,10,25,50"
+ns="5,10,25"
+mus="2,10,25"
 ms="1,3,5,10"
 runs="30"
 
@@ -30,7 +30,3 @@ for algorithm in "${algorithms[@]}"; do
         ./start_experiment.sh "$wall_time" "$algorithm" "$mutation_operator" "$runs" "$mus" "$ns" "$current_ms" "$current_alpha" "$current_lambdas"
     done
 done
-
-./start_experiment.sh "0-01:00:00" "Survivor-Opt" "1RAI" "30" "10,25" "30,40" "1" "-" "-"
-
-#TODO make Trajectory Tests

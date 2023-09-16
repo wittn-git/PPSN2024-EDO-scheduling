@@ -130,6 +130,7 @@ Population_Noah<T,L> noah(
         bound_value = bound_change(population, evaluate, remaining_solutions_n);
         diversity_optimization(population, termination_criterion, select_survivors_div, mutate, evaluate, diversity_value, bound_value, mu, div_generations_con);
     }
+    // TODO add trajectory testing
     
     return population;
 }
