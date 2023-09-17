@@ -78,8 +78,6 @@ Population_Mu1<T,L> mu1_constrained(
     int run, int OPT, std::string operator_string, std::string output_file
 ){
 
-    double OPT = evaluate({initial_gene})[0];
-
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_fixed(std::vector<T>(mu, initial_gene));
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents =  select_random(1);
