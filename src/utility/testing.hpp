@@ -4,7 +4,6 @@
 #include <chrono>
 
 #include "../algorithms/simple.hpp"
-#include "../algorithms/noah.hpp"
 #include "../algorithms/mu1.hpp"
 #include "../utility/generating.hpp"
 #include "../utility/documenting.hpp"
@@ -85,13 +84,7 @@ void test_base(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, s
         );
         write_to_file(createPopulationReport(mu1_unconst_pop, evaluate, diversity_value, "Mu1-unconst", mu, n, m, OPT) + "\n", output_file);
 
-        Population<T,L> noah_pop = noah(
-            seed, mu, n, m,
-            terminate_generations(500), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
-            mu, 0.5*mu, 0.5*mu
-        );
-        write_to_file(createPopulationReport(noah_pop, evaluate, diversity_value, "Noah", mu, n, m, OPT), output_file);
-    };
+   };
 
     loop_parameters(mus, ns, ms, runs, base_test);
 }   
@@ -174,34 +167,4 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
     };
 
     loop_parameters(mus, ns, ms, runs, algorithm_test);
-}
-
-void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms,int runs, double g_ratio, double r_ratio, double c_ratio, std::string output_file, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
-    
-    std::string header = "seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt,algorithm,mutation,g,r,c\n";
-    write_to_file(header, output_file, false);
-    int max_processing_time = 50;
-
-    auto noah_test = [output_file, max_processing_time, mutation_operator, operator_string, g_ratio, r_ratio, c_ratio](int mu, int n, int m, int run) {
-        
-        if(!is_viable_combination(mu, n, m)) return;
-        
-        int seed = generate_seed(mu, n, m, run);
-        MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
-        auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
-        auto [OPT, optimal_solution] = get_optimal_solution(problem, m, evaluate);
-        int g = g_ratio*mu, r = r_ratio*mu, c = c_ratio*mu;
-        auto start = std::chrono::high_resolution_clock::now();
-        auto population = noah(
-            seed, mu, n, m, 
-            terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
-            g, r, c
-        );
-        auto stop = std::chrono::high_resolution_clock::now();
-        std::cout << std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()) + "ms, " + std::to_string(population.get_generation()) + " generations" << std::endl;
-        std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "NOAH", operator_string, g, r, c);
-        write_to_file(result, output_file);
-    };
-
-    loop_parameters(mus, ns, ms, runs, noah_test);
 }
