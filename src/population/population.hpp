@@ -99,7 +99,7 @@ Population<T, L>::Population(
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)>& recombine,
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors
 ) : generation(0), generator(seed), evaluate(evaluate), selectParents(selectParents), mutate(mutate), recombine(recombine), selectSurvivors(selectSurvivors) {
-    assert(initialize != nullptr && "initialize function must be set");
+    assert(initialize != nullptr && evaluate != nullptr && "initialize and evaluate function must be set");
     genes = initialize(generator);
     assert(genes.size() > 0 && "initialize function must return a non-empty vector");
     best_gene = get_bests(false, evaluate)[0];
