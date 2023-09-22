@@ -52,14 +52,14 @@ std::tuple<std::function<std::vector<L>(const std::vector<T>&)>, std::function<d
 
 void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, std::string output_file, std::string algorithm, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
    
-    std::vector<int> robustness_tests = {1}; // TODO input values
+    std::vector<int> robustness_tests = {1,2,5}; // TODO input values
     
     std::string header = "seed,n,m,mu,run,diversity,fitness,OPT,algorithm,mutation";
     header += algorithm == "Mu1-const" ? ",alpha" : "";
     for(int i = 0; i < robustness_tests.size(); i++){
-        header += "rob_test_" + std::to_string(i) + ",";
+        header += ",rob_test_" + std::to_string(i);
     }
-    header += "init\n";
+    header += ",init\n";
     write_to_file(header, output_file, false);
     int max_processing_time = 50;
 

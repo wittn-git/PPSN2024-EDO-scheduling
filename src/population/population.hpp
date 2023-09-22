@@ -103,7 +103,8 @@ Population<T, L>::Population(
     genes = initialize(generator);
     assert(genes.size() > 0 && "initialize function must return a non-empty vector");
     best_gene = T();
-    best_fitness = std::numeric_limits<L>::max();
+    std::vector<L> fitnesses = (evaluate == nullptr) ? std::vector<L>(0) : evaluate(genes);
+    best_fitness = (evaluate == nullptr) ? std::numeric_limits<L>::max() : *std::min_element(fitnesses.begin(), fitnesses.end());
 }
 
 template <typename T, typename L>

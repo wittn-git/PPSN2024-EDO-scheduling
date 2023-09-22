@@ -51,15 +51,14 @@ std::vector<std::tuple<int, int>> generateRandomTuples(int n, int k, std::mt1993
 }
 
 L checkSolutions(std::vector<T> solutions, std::function<std::vector<L>(const std::vector<T>&)> evaluate, std::vector<std::tuple<int, int>> tuples){
-    //TODO test
+    std::vector<int> indices(solutions.size());
+    std::iota(indices.begin(), indices.end(), 0);
     std::vector<L> fitnesses = evaluate(solutions);
-    std::sort(solutions.begin(), solutions.end(), [&fitnesses, solutions](const T& a, const T& b) {
-        int indexA = &a - &solutions[0];
-        int indexB = &b - &solutions[0];
-        return fitnesses[indexA] < fitnesses[indexB];
+    std::sort(indices.begin(), indices.end(), [&](int a, int b) {
+        return fitnesses[a] < fitnesses[b];
     });
-    std::sort(fitnesses.begin(), fitnesses.end());
-    for(auto solution: solutions){
+    for(auto index: indices){
+        auto solution = solutions[index];
         for (auto tuple: tuples){
             int first = std::get<0>(tuple);
             int second = std::get<1>(tuple);
@@ -75,14 +74,13 @@ L checkSolutions(std::vector<T> solutions, std::function<std::vector<L>(const st
             contained:
             if(!contains) goto not_contained;
         }
-        return fitnesses[&solution - &solutions[0]];
-        not_contained:
+        return fitnesses[index];
+        not_contained: true;
     }
     return -1;
 }
 
 std::string do_robustness_tests(std::vector<T> solutions, std::vector<int> robustness_tests, int n, int seed, std::function<std::vector<L>(const std::vector<T>&)> evaluate){
-    //TODO test
     std::vector<L> results;
     std::mt19937 rng(seed);
     for(int k: robustness_tests){
@@ -124,7 +122,7 @@ Population_Mu1<T,L> mu1_unconstrained(
     std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", robustness_results, true);
     write_to_file(result, output_file);
     population.execute(termination_criterion);
-    std::string robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
+    robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
     result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", robustness_results, false);
     write_to_file(result, output_file);
 
@@ -146,8 +144,6 @@ Population_Mu1<T,L> mu1_constrained(
     std::vector<int> robustness_tests
 ){
 
-    double OPT = evaluate({initial_gene})[0];
-
     std::function<std::vector<T>(std::mt19937&)> initialize = initialize_fixed(std::vector<T>(mu, initial_gene));
     std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> recombine = nullptr;
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, std::mt19937&)> select_parents =  select_random(1);
@@ -156,9 +152,12 @@ Population_Mu1<T,L> mu1_constrained(
     std::function<double (const std::vector<T> &)> diversity_value = diversity_vector(diversity_measure);
 
     Population_Mu1<T,L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
-    population.execute(termination_criterion);
     std::string robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
-    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", alpha, robustness_results, false);
+    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", alpha, robustness_results, true);
+    write_to_file(result, output_file);
+    population.execute(termination_criterion);
+    robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
+    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", alpha, robustness_results, false);
     write_to_file(result, output_file);
     return population;
 }
