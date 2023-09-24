@@ -16,36 +16,18 @@ using L = double;
 
 std::vector<std::tuple<int, int>> generateRandomTuples(int n, int k, std::mt19937& rng) {
 
-    assert(k <= n);
+    assert(k < n);
 
     std::vector<std::tuple<int, int>> tuples;
-    std::vector<int> available_first(n);
-    std::vector<int> available_second(n);
-    std::iota(available_first.begin(), available_first.end(), 0);
-    std::iota(available_second.begin(), available_second.end(), 0);
+    std::vector<int> available(n);
+    std::iota(available.begin(), available.end(), 0);
 
+    int first = available[rng() % available.size()];
     for (int i = 0; i < k; i++) {
-        int first_index = rng() % available_first.size();
-        int first = available_first[first_index];
-        available_first.erase(available_first.begin() + first_index);
-
-        int second_index = rng() % available_second.size();
-        int fail_safe = 0;
-        while(
-            (first == available_second[second_index] || 
-            std::find_if(tuples.begin(), tuples.end(), [first, second_index, available_second](const std::tuple<int, int>& tuple) {
-                return std::get<0>(tuple) == available_second[second_index] && std::get<1>(tuple) == first;
-            }) != tuples.end()) &&
-            fail_safe < 10
-        ){
-            second_index = rng() % available_second.size();
-            fail_safe++;
-        }
-        if(fail_safe == 10) std::cout << "WARNING: Could not generate random tuple" << std::endl;
-        int second = available_second[second_index];
-        available_second.erase(available_second.begin() + second_index);
-
+        available.erase(std::remove(available.begin(), available.end(), first), available.end());
+        int second = available[rng() % available.size()];
         tuples.push_back(std::make_tuple(first, second));
+        first = second;
     }
     return tuples;
 }
@@ -64,6 +46,7 @@ L checkSolutions(std::vector<T> solutions, std::function<std::vector<L>(const st
             int second = std::get<1>(tuple);
             bool contains = false;
             for(auto machine: solution){
+                if(machine.size() < 2) continue;
                 for(int i = 0; i < machine.size()-1; i++){
                     if(machine[i] == first && machine[i+1] == second){
                         contains = true;
@@ -84,7 +67,7 @@ std::string do_robustness_tests(std::vector<T> solutions, std::vector<int> robus
     std::vector<L> results;
     std::mt19937 rng(seed);
     for(int k: robustness_tests){
-        if(k > n){
+        if(k >= n){
             results.emplace_back(-2);
             continue;
         }
@@ -122,11 +105,11 @@ Population_Mu1<T,L> mu1_unconstrained(
 
     Population_Mu1<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
     std::string robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
-    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", robustness_results, true);
+    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string, robustness_results, true);
     write_to_file(result, output_file);
     population.execute(termination_criterion);
     robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
-    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", robustness_results, false);
+    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string, robustness_results, false);
     write_to_file(result, output_file);
 
     return population;
@@ -156,11 +139,11 @@ Population_Mu1<T,L> mu1_constrained(
 
     Population_Mu1<T,L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
     std::string robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
-    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", alpha, robustness_results, true);
+    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha, robustness_results, true);
     write_to_file(result, output_file);
     population.execute(termination_criterion);
     robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, seed, evaluate);
-    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", alpha, robustness_results, false);
+    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha, robustness_results, false);
     write_to_file(result, output_file);
     return population;
 }
