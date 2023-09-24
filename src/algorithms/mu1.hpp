@@ -84,7 +84,10 @@ std::string do_robustness_tests(std::vector<T> solutions, std::vector<int> robus
     std::vector<L> results;
     std::mt19937 rng(seed);
     for(int k: robustness_tests){
-        if(k > n) results.emplace_back(-2);
+        if(k > n){
+            results.emplace_back(-2);
+            continue;
+        }
         std::vector<std::tuple<int, int>> tuples = generateRandomTuples(n, k, rng);
         L fitness = checkSolutions(solutions, evaluate, tuples);
         results.emplace_back(fitness);
