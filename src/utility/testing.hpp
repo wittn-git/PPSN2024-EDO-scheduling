@@ -52,7 +52,7 @@ std::tuple<std::function<std::vector<L>(const std::vector<T>&)>, std::function<d
 
 void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms, std::vector<double> alphas, int runs, std::string output_file, std::string algorithm, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
    
-    std::vector<int> robustness_tests = {1,2,4,10,20,24,35,49};
+    std::vector<int> robustness_tests = {2,3,5,10,20,25,35,50};
     
     std::string header = "seed,n,m,mu,run,diversity,fitness,OPT,algorithm,mutation"; 
     header += algorithm == "Mu1-const" ? ",alpha" : "";
