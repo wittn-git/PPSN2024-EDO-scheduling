@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def make_plot(outputfile):
-    df = pd.read_csv('../../data/component_times.csv')
+    df = pd.read_csv('../../data/other_experiments/component_times.csv')
     grouped = df.groupby(['mu', 'n', 'm', 'component'])['time'].mean().reset_index()
     unique_groups = grouped[['mu', 'n', 'm']].drop_duplicates().values
     grouped['time'] = grouped['time'] / 1000
