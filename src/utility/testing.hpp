@@ -61,7 +61,29 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
     auto algorithm_test = [output_file, max_processing_time, algorithm, mutation_operator, alphas, operator_string](int mu, int n, int m, int run) {
 
         if(!is_viable_combination(mu, n, m)) return;
-
+        std::vector<std::vector<int>> combinations_unconst = {
+            {2,5,20},
+            {2,25,15},
+            {10,5,23},
+            {10,10,20},
+            {10,25,0},
+            {25,25,2}
+        };
+        std::vector<std::vector<int>> combinations_const = {
+            {2,5,6},
+            {2,10,0},
+            {2,25,3},
+            {10,5,8},
+            {10,10,11},
+            {10,25,1},
+            {25,25,29}
+        };
+        if(algorithm == "Mu1-unconst"){
+            if(std::find(combinations_unconst.begin(), combinations_unconst.end(), std::vector<int>{mu, n, m}) == combinations_unconst.end()) return;
+        }else if(algorithm == "Mu1-const"){
+            if(std::find(combinations_const.begin(), combinations_const.end(), std::vector<int>{mu, n, m}) == combinations_const.end()) return;
+        }
+        
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
         auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
@@ -92,43 +114,4 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
     };
 
     loop_parameters(mus, ns, ms, runs, algorithm_test);
-}
-
-void test_noah(std::vector<int> mus, std::vector<int> ns, std::vector<int> ms,int runs, double g_ratio, double r_ratio, double c_ratio, std::string output_file, std::string operator_string, std::function<std::vector<T>(const std::vector<T>&, std::mt19937&)> mutation_operator){
-    
-    std::string header = "seed,n,m,mu,run,generations,max_generations,diversity,fitness,opt,algorithm,mutation,g,r,c\n";
-    write_to_file(header, output_file, false);
-    int max_processing_time = 50;
-
-    auto noah_test = [output_file, max_processing_time, mutation_operator, operator_string, g_ratio, r_ratio, c_ratio](int mu, int n, int m, int run) {
-        
-        if(!is_viable_combination(mu, n, m)) return;
-        std::vector<std::vector<int>> combinations = {
-            {2,5,20},
-            {2,25,15},
-            {10,5,23},
-            {10,10,20},
-            {10,25,0},
-            {25,25,2}
-        };
-        if(std::find(combinations.begin(), combinations.end(), std::vector<int>{mu, n, m}) == combinations.end()) return;
-        
-        int seed = generate_seed(mu, n, m, run);
-        MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
-        auto [evaluate, diversity_measure, diversity_value] = get_eval_div_funcs(problem);
-        auto [OPT, optimal_solution] = get_optimal_solution(problem, m, evaluate);
-        int g = g_ratio*mu, r = r_ratio*mu, c = c_ratio*mu;
-        auto start = std::chrono::high_resolution_clock::now();
-        auto population = noah(
-            seed, mu, n, m, 
-            terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, select_tournament(2, mu), diversity_measure,
-            g, r, c
-        );
-        auto stop = std::chrono::high_resolution_clock::now();
-        std::cout << std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()) + "ms, " + std::to_string(population.get_generation()) + " generations" << std::endl;
-        std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "NOAH", operator_string, g, r, c);
-        write_to_file(result, output_file);
-    };
-
-    loop_parameters(mus, ns, ms, runs, noah_test);
 }
