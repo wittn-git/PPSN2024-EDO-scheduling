@@ -1,13 +1,3 @@
-std::vector<std::vector<int>> combinations = {
-            {2,5,20},
-            {2,25,15},
-            {10,5,23},
-            {10,10,20},
-            {10,25,0},
-            {25,25,2}
-        };
-        if(std::find(combinations.begin(), combinations.end(), std::vector<int>{mu, n, m}) == combinations.end()) return;
-
 #!/bin/bash
 
 ns="5,10,25,50,100"
