@@ -55,9 +55,11 @@ Population_Mu1<T,L> mu1_unconstrained(
     std::function<double(const std::vector<T>&)> diversity_value = diversity_vector(diversity_measure);
 
     Population_Mu1<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
+    std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string);
+    write_to_file(result, output_file);
     while(!termination_criterion(population)){
         population.execute();
-        std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string);
+        result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string);
         write_to_file(result, output_file);
     }
         
@@ -86,10 +88,12 @@ Population_Mu1<T,L> mu1_constrained(
     std::function<double(const std::vector<T>&)> diversity_value = diversity_vector(diversity_measure);
 
     Population_Mu1<T,L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
+    std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha);
+    write_to_file(result, output_file);
     
     while(!termination_criterion(population)){
         population.execute();
-        std::string result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha);
+        result = get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha);
         write_to_file(result, output_file);
     }
 

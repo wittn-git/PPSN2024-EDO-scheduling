@@ -79,9 +79,9 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
             {25,25,29}
         };
         if(algorithm == "Mu1-unconst"){
-            if(std::find(combinations_unconst.begin(), combinations_unconst.end(), std::vector<int>{mu, n, m}) == combinations_unconst.end()) return;
+            if(std::find(combinations_unconst.begin(), combinations_unconst.end(), std::vector<int>{mu, n, run}) == combinations_unconst.end()) return;
         }else if(algorithm == "Mu1-const"){
-            if(std::find(combinations_const.begin(), combinations_const.end(), std::vector<int>{mu, n, m}) == combinations_const.end()) return;
+            if(std::find(combinations_const.begin(), combinations_const.end(), std::vector<int>{mu, n, run}) == combinations_const.end()) return;
         }
         
         int seed = generate_seed(mu, n, m, run);

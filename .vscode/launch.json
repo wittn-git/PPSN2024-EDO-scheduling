@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["NOAH", "1RAI", "output_NOAH.csv", "1", "2", "5", "1", "-", "-"],
+            "args": ["Mu1-const", "NSWAP", "output_TRAJ.csv", "8", "2", "5", "1", "0.1", "-"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}/../build",
             "environment": [],
