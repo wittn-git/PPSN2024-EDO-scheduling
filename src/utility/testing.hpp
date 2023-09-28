@@ -97,15 +97,6 @@ void test_mu1_optimization(std::vector<int> mus, std::vector<int> ns, std::vecto
     auto mu1_optimization_test = [runs, output_file, max_processing_time, mutation_operator](int mu, int n, int m, int run) {
 
         if(!is_viable_combination(mu, n, m)) return;
-        std::vector<std::vector<int>> combinations = {
-            {2,5,20},
-            {2,25,15},
-            {10,5,23},
-            {10,10,20},
-            {10,25,0},
-            {25,25,2}
-        };
-        if(std::find(combinations.begin(), combinations.end(), std::vector<int>{mu, n, m}) == combinations.end()) return;
 
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
