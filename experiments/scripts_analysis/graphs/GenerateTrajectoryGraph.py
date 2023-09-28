@@ -32,6 +32,6 @@ if __name__ == "__main__":
     
     output_file = sys.argv[1]
     constrained = sys.argv[2] == 'True'
-    input_file = f"../../../../../Documents/trajectory_experiments/data_mu1-{'' if constrained else 'un'}const_trajectory.csv"
+    input_file = f"../../data/trajectory_experiments/output_mu1-{'' if constrained else 'un'}const_trajectory.csv"
 
     make_plot(input_file, output_file, constrained)
