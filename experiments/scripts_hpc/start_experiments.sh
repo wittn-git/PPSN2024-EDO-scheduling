@@ -10,7 +10,7 @@ wall_time="7-00:00:00"
 alphas="0.1 0.3 0.6"
 lambdas="0.1 0.2 2" 
 
-algorithms=("Mu1-unconst" "Mu1-unconst")
+algorithms=("Mu1-unconst" "Mu1-const")
 mutation_operators=("NSWAP" "1RAI" "XRAI")
 
 for algorithm in "${algorithms[@]}"; do
