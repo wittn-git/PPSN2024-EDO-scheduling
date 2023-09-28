@@ -154,9 +154,10 @@ L Population<T, L>::get_best_fitness(){
 template <typename T, typename L>
 std::vector<T> Population<T, L>::get_genes(bool keep_duplicats){
     if(keep_duplicats) return genes;
-    std::sort(genes.begin(), genes.end());
-    genes.erase(std::unique(genes.begin(), genes.end()), genes.end());
-    return genes;
+    std::vector<T> genes_copy = this->genes;
+    std::sort(genes_copy.begin(), genes_copy.end());
+    genes_copy.erase(std::unique(genes_copy.begin(), genes_copy.end()), genes_copy.end());
+    return genes_copy;
 }
 
 template <typename T, typename L>
