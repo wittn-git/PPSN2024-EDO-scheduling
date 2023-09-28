@@ -2,19 +2,25 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def make_plot(input_file, output_file, constrained):
+def make_plot(input_file, output_file, constrained, filters):
     df = pd.read_csv(input_file)
     grouped = df.groupby(['mu', 'n', 'run'])
     for (mu, n, run), group in grouped:
+        if((mu, n) not in filters): continue
+        
         fig, ax = plt.subplots()
 
         if(constrained):
             alpha_groups = group.groupby(['alpha', 'm', 'mutation'])
             for (alpha, m, operator), alpha_group in alpha_groups:
+                if(alpha not in filters[(mu, n)]['alpha'] or m not in filters[(mu, n)]['m'] or operator not in filters[(mu, n)]['operator']):
+                    continue
                 ax.plot(alpha_group['generations'], alpha_group['diversity'], label=f'Alpha {alpha}, m {m}, operator {operator}')
         else:
             m_groups = group.groupby(['m', 'mutation'])
             for (m, operator), m_group in m_groups:
+                if(m not in filters[(mu, n)]['m'] or operator not in filters[(mu, n)]['operator']):
+                    continue
                 ax.plot(m_group['generations'], m_group['diversity'], label=f'm {m}, operator {operator}')       
 
         ax.set_xlabel('Generation')
@@ -34,4 +40,17 @@ if __name__ == "__main__":
     constrained = sys.argv[2] == 'True'
     input_file = f"../../data/trajectory_experiments/output_mu1-{'' if constrained else 'un'}const_trajectory.csv"
 
-    make_plot(input_file, output_file, constrained)
+    filters_const = {
+        (10,5): {
+            "alpha": [0.1, 0.3, 0.6],
+            "operator": ["XRAI_0.100000"],
+            "m": [3]
+        }
+    }
+
+    filters_unconst = {
+
+    }
+
+    filters = filters_const if constrained else filters_unconst
+    make_plot(input_file, output_file, constrained, filters)
