@@ -61,28 +61,6 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
     auto algorithm_test = [output_file, max_processing_time, algorithm, mutation_operator, alphas, operator_string](int mu, int n, int m, int run) {
 
         if(!is_viable_combination(mu, n, m)) return;
-        std::vector<std::vector<int>> combinations_unconst = {
-            {2,5,20},
-            {2,25,15},
-            {10,5,23},
-            {10,10,20},
-            {10,25,0},
-            {25,25,2}
-        };
-        std::vector<std::vector<int>> combinations_const = {
-            {2,5,6},
-            {2,10,0},
-            {2,25,3},
-            {10,5,8},
-            {10,10,11},
-            {10,25,1},
-            {25,25,29}
-        };
-        if(algorithm == "Mu1-unconst"){
-            if(std::find(combinations_unconst.begin(), combinations_unconst.end(), std::vector<int>{mu, n, run}) == combinations_unconst.end()) return;
-        }else if(algorithm == "Mu1-const"){
-            if(std::find(combinations_const.begin(), combinations_const.end(), std::vector<int>{mu, n, run}) == combinations_const.end()) return;
-        }
         
         int seed = generate_seed(mu, n, m, run);
         MachineSchedulingProblem problem = get_problem(seed, n, max_processing_time);
