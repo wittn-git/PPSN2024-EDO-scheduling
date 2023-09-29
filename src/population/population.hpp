@@ -25,8 +25,6 @@ protected:
     std::vector<T> genes;
     std::mt19937 generator;
     int generation;
-    T best_gene;
-    L best_fitness;
 
     // Function taking a vector of genes of type T and returning its fitness value vector of type L
     std::function<std::vector<L>(const std::vector<T>&)>& evaluate;
@@ -40,7 +38,6 @@ protected:
     std::function<std::vector<T>(const std::vector<T>&, const std::vector<L>&, const std::vector<T>&, std::mt19937&)>& selectSurvivors;
 
     std::string gene_to_string(T gene);
-    void compare_best(std::vector<L> fitnesses);
 
 public:
 
@@ -102,8 +99,6 @@ Population<T, L>::Population(
     assert(initialize != nullptr && evaluate != nullptr && "initialize and evaluate function must be set");
     genes = initialize(generator);
     assert(genes.size() > 0 && "initialize function must return a non-empty vector");
-    best_gene = get_bests(false, evaluate)[0];
-    best_fitness = evaluate({best_gene})[0];
 }
 
 template <typename T, typename L>
@@ -113,7 +108,6 @@ template <typename T, typename L>
 void Population<T, L>::execute() {
     generation++;
     std::vector<L> fitnesses = (evaluate == nullptr) ? std::vector<L>(0) : evaluate(genes);
-    if(evaluate != nullptr) compare_best(fitnesses);
     assert(evaluate == nullptr || fitnesses.size() == genes.size());
     std::vector<T> parents = (selectParents == nullptr) ? genes : selectParents(genes, fitnesses, generator);
     std::vector<T> children = (recombine == nullptr) ? parents : recombine(parents, generator);
@@ -148,7 +142,9 @@ std::vector<T> Population<T, L>::get_bests(bool keep_duplicats, std::function<st
 
 template <typename T, typename L>
 L Population<T, L>::get_best_fitness(){
-    return best_fitness;
+    std::vector<L> fitnesses = evaluate(genes);
+    auto min_it = std::min_element(fitnesses.begin(), fitnesses.end());
+    return *min_it;
 }
 
 template <typename T, typename L>
@@ -189,15 +185,6 @@ std::string Population<T, L>::gene_to_string(T gene){
     }
     s += "\n";
     return s;
-}
-
-template <typename T, typename L>
-void Population<T, L>::compare_best(std::vector<L> fitnesses){
-    auto min_it = std::min_element(fitnesses.begin(), fitnesses.end());
-    if(*min_it <= best_fitness){
-        best_fitness = *min_it;
-        best_gene = genes[std::distance(fitnesses.begin(), min_it)];
-    }
 }
 
 template <typename T, typename L>
