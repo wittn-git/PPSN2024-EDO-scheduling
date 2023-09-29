@@ -10,7 +10,7 @@ wall_time="7-00:00:00"
 alphas="0.1 0.3 0.6"
 lambdas="0.1 0.2 2" 
 
-algorithms=("Mu1-const" "Mu1-unconst")
+algorithms=("NOAH")
 mutation_operators=("1RAI" "XRAI" "NSWAP")
 
 for algorithm in "${algorithms[@]}"; do
@@ -30,5 +30,3 @@ for algorithm in "${algorithms[@]}"; do
         ./start_experiment.sh "$wall_time" "$algorithm" "$mutation_operator" "$runs" "$mus" "$ns" "$current_ms" "$current_alpha" "$current_lambdas"
     done
 done
-
-./start_experiment.sh "0-01:00:00" "Survivor-Opt" "1RAI" "30" "10,25" "30,40" "1" "-" "-"
