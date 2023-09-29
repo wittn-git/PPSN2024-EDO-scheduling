@@ -146,13 +146,13 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
                 initialize_random(mu, n, m), evaluate, mutation_operator, select_roulette(mu), select_mu(mu, evaluate),
                 300
             );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, algorithm, operator_string);
+            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(evaluate), OPT, algorithm, operator_string);
         }else if(algorithm == "Mu1-unconst"){
             Population<T,L> population = mu1_unconstrained(
                 seed, m, n, mu,
                 terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, diversity_measure
             );
-            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, algorithm, operator_string);
+            result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(evaluate), OPT, algorithm, operator_string);
         }else if(algorithm == "Mu1-const"){
             for(double alpha: alphas){
                 Population<T,L> population = mu1_constrained(
@@ -160,7 +160,7 @@ void test_algorithm(std::vector<int> mus, std::vector<int> ns, std::vector<int> 
                     terminate_diversitygenerations(1, true, diversity_measure, n*n*mu), evaluate, mutation_operator, diversity_measure,
                     alpha, optimal_solution
                 );
-                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, algorithm, operator_string, alpha);
+                result += get_csv_line(seed, n, m, mu, run, population.get_generation(), n*n*mu, diversity_value(population.get_genes(true)), population.get_best_fitness(evaluate), OPT, algorithm, operator_string, alpha);
             }
         }
         write_to_file(result, output_file);

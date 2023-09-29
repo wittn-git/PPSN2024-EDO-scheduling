@@ -60,7 +60,7 @@ public:
     //executes iterations of the evolutionary algorithm until the termination criterion is met                                              
     virtual void execute(std::function<bool(Population<T,L>&)> termination_criterion);   
     //get maximum fitness value over the course of the algorithm
-    L get_best_fitness();                 
+    L get_best_fitness(std::function<std::vector<L>(const std::vector<T>&)>& evaluate);                 
     //returns the best genes in the population, using the given evaluate function
     std::vector<T> get_bests(bool keep_duplicats, std::function<std::vector<L>(const std::vector<T>&)>& evaluate);       
     //returns the current genes in the population           
@@ -141,7 +141,7 @@ std::vector<T> Population<T, L>::get_bests(bool keep_duplicats, std::function<st
 }
 
 template <typename T, typename L>
-L Population<T, L>::get_best_fitness(){
+L Population<T, L>::get_best_fitness(std::function<std::vector<L>(const std::vector<T>&)>& evaluate){
     std::vector<L> fitnesses = evaluate(genes);
     auto min_it = std::min_element(fitnesses.begin(), fitnesses.end());
     return *min_it;
