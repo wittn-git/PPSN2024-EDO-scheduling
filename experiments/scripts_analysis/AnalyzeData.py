@@ -2,7 +2,7 @@ import sys
 from tabulate import tabulate
 import pandas as pd
 
-def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, mutation):
+def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, mutation, constrained):
 
     df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
     df = df.copy()
@@ -51,25 +51,26 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
 
     return result_str
 
-def get_summary(df, grouping_columns, algorithm, mutation):
+def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
     df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
     
     grouped = df.groupby(grouping_columns)
     occurrences = grouped.size().reset_index(name='occurrences')
-    summary = grouped.agg({
+    aggregation_dict = {
         'generations': 'mean',
-        'fitness': 'mean',
         'opt': 'mean',
         'diversity': 'mean',
         'max_generations': 'mean'
-    }).reset_index()
+    }
+    if(constrained): aggregation_dict['fitness'] = 'mean'
+    summary = grouped.agg(aggregation_dict).reset_index()
 
     summary['std_generations'] = grouped['generations'].std().reset_index(drop=True)
     summary['diversity'] = summary['diversity'] * 100
-    summary['fitness_worse_than_opt'] = grouped.apply(lambda x: (x['fitness'] < x['opt']).sum() / len(x)).reset_index(drop=True)
-    summary['diversity_not_1'] = grouped.apply(lambda x: (x['diversity'] != 1).sum()).reset_index(drop=True)
+    if(constrained): summary['fitness_worse_than_opt'] = grouped.apply(lambda x: (x['fitness'] < x['opt']).sum() / len(x)).reset_index(drop=True)
+    summary['diversity_not_1'] = grouped.apply(lambda x: (x['diversity'] != 1).sum() / runs).reset_index(drop=True)
     summary['mean_generations_ratio'] = summary['generations'] / summary['max_generations']
-    summary['fitness_worse_than_opt'] = summary['fitness'] < summary['opt'] 
+    if(constrained): summary['fitness_worse_than_opt'] = summary['fitness'] < summary['opt'] 
 
     summary = pd.merge(summary, occurrences, on=grouping_columns)   
 
@@ -77,16 +78,17 @@ def get_summary(df, grouping_columns, algorithm, mutation):
 
 if(__name__ == "__main__"):
 
-    if len(sys.argv) < 5:
-        print("Usage: python3 AnalyzeData.py <input_file> <output_file_prefix> <grouping_columns> <runs> [<algorithms> <mutations>]")
+    if len(sys.argv) < 6:
+        print("Usage: python3 AnalyzeData.py <input_file> <output_file_prefix> <grouping_columns> <runs> <constrained> [<algorithms> <mutations>]")
         exit(1)
 
     input_file = sys.argv[1]
     output_file_prefix = sys.argv[2]
     grouping_columns = sys.argv[3].split(",")
     runs = int(sys.argv[4])
-    algorithms = sys.argv[5].split(",") if len(sys.argv) > 5 else None
-    mutations = sys.argv[6].split(",") if len(sys.argv) > 6 else None
+    constrained = sys.argv[5] == "True"
+    algorithms = sys.argv[6].split(",") if len(sys.argv) > 5 else None
+    mutations = sys.argv[7].split(",") if len(sys.argv) > 6 else None
 
     pd.set_option('display.max_rows', None)
     df = pd.read_csv(input_file)
@@ -99,10 +101,10 @@ if(__name__ == "__main__"):
 
     for _, entry in algorithm_combinations.iterrows():
         output_file = output_file_prefix + "_" + entry['algorithm'] + "_" + entry['mutation']
-        summary = get_summary(df, grouping_columns, entry['algorithm'], entry['mutation'])
+        summary = get_summary(df, grouping_columns, entry['algorithm'], entry['mutation'], runs, constrained)
         summary.to_csv(output_file + "_summary.csv")
         with open(output_file + "_summary.txt", 'w') as f:
             f.write(tabulate(summary, headers='keys', tablefmt='psql'))
         
         with open(output_file + "_data_information.txt", 'w') as f:
-            f.write(get_data_information(df, summary, grouping_columns, runs, entry['algorithm'], entry['mutation']))
+            f.write(get_data_information(df, summary, grouping_columns, runs, entry['algorithm'], entry['mutation'], constrained))

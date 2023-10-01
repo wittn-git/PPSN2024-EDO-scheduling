@@ -1,10 +1,12 @@
 import pandas as pd
+import sys
 
-def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, include_entries=[], scriptsize=True):
+def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, filtered_mus, include_entries=[], scriptsize=True):
     dataframes = [pd.read_csv(file) for file in csv_file]
-
+    
     for df in dataframes:
         df = df.sort_values(by=grouping_attributes)
+        df = df[df['mu'].isin(filtered_mus)]
 
     if(include_entries):
         for i, df in enumerate(dataframes):
@@ -81,39 +83,67 @@ def read_csv_to_latex(csv_file, shown_header, actual_header, grouping_attributes
     latex_table += " \end{center}\n"
     return latex_table
 
+def get_running_time_table():
+    pass
+
+def get_robustness_table():
+    pass
+
 if __name__ == "__main__":
 
-    #table_name = "table_constrained.tex"
-    table_name = "table_unconstrained.tex"
-    
-    '''csv_files = [
-        "results/out_Mu1-const_NSWAP_summary.csv",
-        "results/out_Mu1-const_1RAI_summary.csv", 
-        "results/out_Mu1-const_XRAI_0.100000_summary.csv",
-        "results/out_Mu1-const_XRAI_0.200000_summary.csv",
-        "results/out_Mu1-const_XRAI_2.000000_summary.csv"        
-    ]'''
-    csv_files = [
-        "results/out_Mu1-unconst_NSWAP_summary.csv",
-        "results/out_Mu1-unconst_1RAI_summary.csv", 
-        "results/out_Mu1-unconst_XRAI_0.100000_summary.csv",
-        "results/out_Mu1-unconst_XRAI_0.200000_summary.csv",
-        "results/out_Mu1-unconst_XRAI_2.000000_summary.csv"        
-    ]
+    if len(sys.argv) < 4:
+        print("Usage: python3 CreateTable.py <table_type> <constrained> <outputfile> [<filtered_mus>] [<include_entries>]")
+        exit(1)
 
-    upper_header = ["$NSWAP$", "$1(R+I)$", "$X(R+I), \lambda = 0.1$", "$X(R+I), \lambda = 0.2$", "$X(R+I), \lambda = 2.00$"]
-    header = ["$\mu$", "$n$", "$m$", "$\\alpha$", "$D_0$", "$OBJ$", "$OPT$"]
-    #columns = ['mu', 'n', 'm', 'alpha', 'diversity', 'fitness', 'opt']
-    columns = ['mu', 'n', 'm', 'diversity', 'fitness', 'opt']
-    #grouping = ['mu', 'n', 'm', 'alpha']
-    grouping = ['mu', 'n', 'm']
-    #grouping_header = ["$\mu$", "$n$", "$m$", "$\\alpha$"]
-    grouping_header = ["$\mu$", "$n$", "$m$"]
-    #decimal_columns = ['diversity', 'fitness', 'alpha', 'opt']
-    decimal_columns = ['diversity', 'fitness', 'opt']
+    table_type = sys.argv[1]
+    constrained = sys.argv[2] == "True"
+    outputfile = sys.argv[3]
     include_entries = []
-    #include_entries = [2,3,5,9,11,12,16,17,31,32,33,62,63,72,73,101]
+    if(len(sys.argv) > 4):
+        filtered_mus = [int(x) for x in sys.argv[4].split(",")]
+    if(len(sys.argv) > 5):
+        include_entries = [int(x) for x in sys.argv[4].split(",")]
+
+    upper_header = ["$1(R+I)$", "$X(R+I), \lambda = 0.1$", "$X(R+I), \lambda = 0.2$", "$X(R+I), \lambda = 2.00$", "$NSWAP$"]
+    grouping = ['mu', 'n', 'm']
+    grouping_header = ["$\mu$", "$n$", "$m$"]
+    decimal_columns = ['diversity']
+    if(constrained):
+        grouping.append('alpha')
+        grouping_header.append("$\\alpha$")
+        decimal_columns.append('alpha')
     
-    latex_table = read_csv_to_latex(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, include_entries, True)
-    with open("results/" + table_name, 'w') as f:
-        f.write(latex_table)
+    if(table_type == "fitness"):
+        header = grouping_header + ["$D_0$", "$OBJ$", "$OPT$"]
+        columns = grouping + ['diversity', 'fitness', 'opt']
+        decimal_columns += ['fitness', 'opt']
+    elif(table_type == "time"):
+        header = grouping_header + ["$D_0$", "\\textbf{mean}", "\\textbf{std}"]
+        columns = grouping + ['diversity', 'generations', 'std_generations']
+        decimal_columns += ['std_generations', 'generations']
+    elif(table_type == "diversity"):
+        header = grouping_header + ["$D_0$", "$Dx$"]
+        columns = grouping + ['diversity', 'diversity_not_1']
+        decimal_columns += ['diversity_not_1']
+    elif(table_type == "robustness"):
+        pass
+    else:
+        print("Invalid table type")
+        exit(1)
+    
+    if(table_type == "fitness" or table_type == "running_time" or table_type == "diversity"):
+        csv_files = [            
+            f"results/out_Mu1-{'' if constrained else 'un'}const_1RAI_summary.csv",
+            f"results/out_Mu1-{'' if constrained else 'un'}const_XRAI_0.100000_summary.csv",
+            f"results/out_Mu1-{'' if constrained else 'un'}const_XRAI_0.200000_summary.csv",
+            f"results/out_Mu1-{'' if constrained else 'un'}const_XRAI_2.000000_summary.csv",
+            f"results/out_Mu1-{'' if constrained else 'un'}const_NSWAP_summary.csv"    
+        ]
+    else:
+        pass
+    
+    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, include_entries)
+    with open(outputfile, 'w') as f:
+        f.write(table)
+    
+    # TODO make robustness table
