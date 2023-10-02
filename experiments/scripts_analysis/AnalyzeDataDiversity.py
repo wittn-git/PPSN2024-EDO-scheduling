@@ -9,7 +9,7 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
     df['mean_generations_ratio'] = df['generations'] / df['max_generations']
     df['fitness_worse_than_opt'] = df['fitness'] < df['opt']
     merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
-    merged_df['diversity'] = merged_df['diversity'] * 100
+    merged_df['diversity'] = merged_df['diversity']
     
     result = []
     result.append(("Number of datapoints: ", str(len(merged_df))))
@@ -23,15 +23,15 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
         result.append(("Number of datapoints: ", str(len(merged_df))))
         result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))    
 
-        result.append(("Ratio of max diversity reached: ", str(len(merged_df[merged_df['diversity'] == 100]) / len(merged_df))))
+        result.append(("Ratio of max diversity reached: ", str(len(merged_df[merged_df['diversity'] == 1]) / len(merged_df))))
 
-        result.append(("Average generation ratio (cases with only max diversity): ", str(merged_df[merged_df['diversity'] == 100]['mean_generations_ratio'].mean())))
-        result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 100) & (merged_df['diversity_grouped'] == 100)]['mean_generations_ratio'].mean())))
-        result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 100]['mean_generations_ratio'].mean())))
-        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 100 & (merged_df['diversity_grouped'] < 100)]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (cases with only max diversity): ", str(merged_df[merged_df['diversity'] == 1]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 1) & (merged_df['diversity_grouped'] == 1)]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 1]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 1 & (merged_df['diversity_grouped'] < 1)]['mean_generations_ratio'].mean())))
 
         result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
-        result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 100) & (merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
+        result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 1) & (merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
 
     result_str = ""
 
@@ -66,11 +66,10 @@ def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
     summary = grouped.agg(aggregation_dict).reset_index()
 
     summary['std_generations'] = grouped['generations'].std().reset_index(drop=True)
-    summary['diversity'] = summary['diversity'] * 100
     if(constrained): summary['fitness_worse_than_opt'] = grouped.apply(lambda x: (x['fitness'] < x['opt']).sum() / len(x)).reset_index(drop=True)
     summary['diversity_not_1'] = grouped.apply(lambda x: (x['diversity'] != 1).sum() / runs).reset_index(drop=True)
     summary['mean_generations_ratio'] = summary['generations'] / summary['max_generations']
-    if(constrained): summary['fitness_worse_than_opt'] = summary['fitness'] < summary['opt'] 
+    if(constrained): summary['fitness_worse_than_opt'] = summary['fitness'] > summary['opt'] 
 
     summary = pd.merge(summary, occurrences, on=grouping_columns)   
 
