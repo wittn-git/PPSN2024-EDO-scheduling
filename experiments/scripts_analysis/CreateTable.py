@@ -112,6 +112,9 @@ if __name__ == "__main__":
         grouping.append('alpha')
         grouping_header.append("$\\alpha$")
         decimal_columns.append('alpha')
+    if(table_type == "robustness"):
+        grouping.append('init')
+        grouping_header.append("$init$")
     
     if(table_type == "fitness"):
         header = grouping_header + ["$D_0$", "$OBJ$", "$OPT$"]
@@ -126,7 +129,9 @@ if __name__ == "__main__":
         columns = grouping + ['diversity', 'diversity_not_1']
         decimal_columns += ['diversity_not_1']
     elif(table_type == "robustness"):
-        pass
+        header = grouping_header + ["$D_0$", "$R_{\%}$", "$R_{avg}$"]
+        columns = grouping + ['diversity', 'Perc_robustness', 'Mean_robustness']
+        decimal_columns += ['Perc_robustness', 'Mean_robustness']
     else:
         print("Invalid table type")
         exit(1)
@@ -140,7 +145,13 @@ if __name__ == "__main__":
             f"results/out_Mu1-{'' if constrained else 'un'}const_NSWAP_summary.csv"    
         ]
     else:
-        pass
+        csv_files = [            
+            f"results/out_rob_Mu1-{'' if constrained else 'un'}const_1RAI_summary.csv",
+            f"results/out_rob_Mu1-{'' if constrained else 'un'}const_XRAI_0.100000_summary.csv",
+            f"results/out_rob_Mu1-{'' if constrained else 'un'}const_XRAI_0.200000_summary.csv",
+            f"results/out_rob_Mu1-{'' if constrained else 'un'}const_XRAI_2.000000_summary.csv",
+            f"results/out_rob_Mu1-{'' if constrained else 'un'}const_NSWAP_summary.csv"    
+        ]
     
     table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, include_entries)
     with open(outputfile, 'w') as f:

@@ -78,7 +78,7 @@ def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
 if(__name__ == "__main__"):
 
     if len(sys.argv) < 6:
-        print("Usage: python3 AnalyzeData.py <input_file> <output_file_prefix> <grouping_columns> <runs> <constrained> [<algorithms> <mutations>]")
+        print("Usage: python3 AnalyzeDataDiversity.py <input_file> <output_file_prefix> <grouping_columns> <runs> <constrained> [<algorithms> <mutations>]")
         exit(1)
 
     input_file = sys.argv[1]

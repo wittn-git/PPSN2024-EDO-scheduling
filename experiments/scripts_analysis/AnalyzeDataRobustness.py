@@ -7,7 +7,7 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
     df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
     df = df.copy()
     merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
-    merged_df['diversity'] = merged_df['diversity'] * 100
+    merged_df['diversity'] = merged_df['diversity']
     
     result = []
     result.append(("Number of datapoints: ", str(len(merged_df))))
@@ -24,7 +24,7 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
         positive_robustness_tests_init, positive_robustness_tests_notinit = 0, 0
         for row in merged_df.iterrows():
             for i in range(tests_n):
-                if(row[1][f'rob_test_{i}'] >= -1):
+                if(row[1][f'rob_test_{i}'] >= -1 and row[1]['init'] == 1):
                     valid_robustness_tests += 1
                 if(row[1][f'rob_test_{i}'] >= 0):
                     if(row[1]['init'] == 1):
@@ -80,7 +80,7 @@ def get_summary(df, grouping_columns, algorithm, mutation, tests_n):
 if(__name__ == "__main__"):
     
     if len(sys.argv) < 6:
-        print("Usage: python3 AnalyzeData.py <input_file> <output_file_prefix> <grouping_columns> <runs> <tests_n> [<algorithms> <mutations>]")
+        print("Usage: python3 AnalyzeDataRobustness.py <input_file> <output_file_prefix> <grouping_columns> <runs> <tests_n> [<algorithms> <mutations>]")
         exit(1)
 
     input_file = sys.argv[1]
