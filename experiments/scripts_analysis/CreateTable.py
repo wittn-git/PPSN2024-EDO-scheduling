@@ -1,6 +1,18 @@
 import pandas as pd
 import sys
 
+def format_float(value):
+    try:
+        return '{:.2f}'.format(float(value))
+    except ValueError:
+        return value
+    
+def format_int(value):
+    try:
+        return '{:.0f}'.format(int(value))
+    except ValueError:
+        return value
+
 def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, filtered_mus, include_entries=[], scriptsize=True):
     dataframes = [pd.read_csv(file) for file in csv_file]
     
@@ -15,9 +27,9 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
     for column in actual_header:
         for i, df in enumerate(dataframes):
             if(column in decimal_columns):
-                df[column] = df[column].apply(lambda x: f"{x:.2f}")
+                df[column] = df[column].apply(format_float)
             else:
-                df[column] = df[column].apply(lambda x: f"{x:.0f}")
+                df[column] = df[column].apply(format_int)
 
     ungrouped_header = [x for x in shown_header if x not in grouping_header]
 
@@ -60,7 +72,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                 currents[attribute] = first_row[attribute]
                 occ_keys = []
                 for attr in grouping_attributes:
-                    occ_keys.append(currents[attr])
+                    occ_keys.append(str(currents[attr]))
                     if(attr == attribute): break
                 columns.append(f"\multirow{{{occurence_dict[','.join(occ_keys)]}}}{{{'*'}}}{{{first_row[attribute]}}}") 
             else: columns.append("")
@@ -98,7 +110,7 @@ if __name__ == "__main__":
     table_type = sys.argv[1]
     constrained = sys.argv[2] == "True"
     outputfile = sys.argv[3]
-    include_entries = []
+    include_entries, filtered_mus = [], []
     if(len(sys.argv) > 4):
         filtered_mus = [int(x) for x in sys.argv[4].split(",")]
     if(len(sys.argv) > 5):
@@ -130,8 +142,8 @@ if __name__ == "__main__":
         decimal_columns += ['diversity_not_1']
     elif(table_type == "robustness"):
         header = grouping_header + ["$D_0$", "$R_{\%}$", "$R_{avg}$"]
-        columns = grouping + ['diversity', 'Perc_robustness', 'Mean_robustness']
-        decimal_columns += ['Perc_robustness', 'Mean_robustness']
+        columns = grouping + ['diversity', 'Perc_rob_test_0', 'Mean_rob_test_0']
+        decimal_columns += ['Perc_rob_test_0', 'Mean_rob_test_0']
     else:
         print("Invalid table type")
         exit(1)
@@ -156,5 +168,3 @@ if __name__ == "__main__":
     table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, include_entries)
     with open(outputfile, 'w') as f:
         f.write(table)
-    
-    # TODO make robustness table
