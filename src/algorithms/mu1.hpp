@@ -143,11 +143,11 @@ Population_Mu1<T,L> mu1_unconstrained(
 
     Population_Mu1<T, L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
     std::string robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, m, seed, evaluate);
-    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string, robustness_results, true);
+    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string, robustness_results, "True");
     write_to_file(result, output_file);
     population.execute(termination_criterion);
     robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, m, seed, evaluate);
-    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string, robustness_results, false);
+    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-unconst", operator_string, robustness_results, "False");
     write_to_file(result, output_file);
 
     return population;
@@ -177,11 +177,11 @@ Population_Mu1<T,L> mu1_constrained(
 
     Population_Mu1<T,L> population(seed, initialize, evaluate, select_parents, mutate, recombine, select_survivors, selectSurvivors_Div);
     std::string robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, m, seed, evaluate);
-    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha, robustness_results, true);
+    std::string result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha, robustness_results, "True");
     write_to_file(result, output_file);
     population.execute(termination_criterion);
     robustness_results = do_robustness_tests(population.get_genes(false), robustness_tests, n, m, seed, evaluate);
-    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha, robustness_results, false);
+    result = get_csv_line(seed, n, m, mu, run, diversity_value(population.get_genes(true)), population.get_best_fitness(), OPT, "Mu1-const", operator_string, alpha, robustness_results, "False");
     write_to_file(result, output_file);
     return population;
 }
