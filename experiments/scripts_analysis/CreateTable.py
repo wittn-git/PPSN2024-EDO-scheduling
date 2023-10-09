@@ -8,18 +8,21 @@ def format_float(value):
         return value
     
 def format_int(value):
+    if isinstance(value, bool):
+        return str(value)
     try:
         return '{:.0f}'.format(int(value))
     except ValueError:
         return value
 
-def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, filtered_mus, include_entries=[], scriptsize=True):
+def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, include_entries=[], scriptsize=True):
     dataframes = [pd.read_csv(file) for file in csv_file]
-    
-    for df in dataframes:
-        df = df.sort_values(by=grouping_attributes)
-        df = df[df['mu'].isin(filtered_mus)]
-
+    for i, df in enumerate(dataframes):
+        sorting_ascending = [False if x == 'init' else True for x in grouping_attributes]
+        dataframes[i] = df.sort_values(by=grouping_attributes, ascending=sorting_ascending).reset_index().drop(columns=['index'])
+        if(filtered_mus != []):
+            dataframes[i] = df[df['mu'].isin(filtered_mus)]
+   
     if(include_entries):
         for i, df in enumerate(dataframes):
             dataframes[i] = df.loc[include_entries]
@@ -27,9 +30,9 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
     for column in actual_header:
         for i, df in enumerate(dataframes):
             if(column in decimal_columns):
-                df[column] = df[column].apply(format_float)
+                dataframes[i][column] = df[column].apply(format_float)
             else:
-                df[column] = df[column].apply(format_int)
+                dataframes[i][column] = df[column].apply(format_int)
 
     ungrouped_header = [x for x in shown_header if x not in grouping_header]
 
@@ -58,7 +61,34 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
 
     currents = {attr: -1 for attr in grouping_attributes}
 
-    for row in dataframes[0].iterrows():
+    highlights = {col: {} for col in highlight_cols}
+    for i, row in enumerate(dataframes[0].iterrows()):
+        valid_row = True
+        for attr, val in exclude_rows.items():
+            if(dataframes[0].at[i, attr] == val):
+                valid_row = False
+                break
+        if(not valid_row): continue
+
+        group_values = [dataframes[0].at[i, attr] for attr in grouping_attributes]
+
+        for col in highlight_cols:
+            max_x = None
+            max_x_idx = []
+            for idx, df in enumerate(dataframes):
+                mask = pd.Series(True, index=df.index)
+                for attribute, value in zip(grouping_attributes, group_values):
+                    mask = mask & (df[attribute] == value)
+                current_x = df[mask][col].values[0]
+                if max_x is None or (current_x > max_x and highlight_max) or (current_x < max_x and not highlight_max):
+                    max_x = current_x
+                    max_x_idx = [idx]
+                    continue    
+                if max_x == current_x:
+                    max_x_idx.append(idx)
+            highlights[col][i] = max_x_idx
+
+    for i, row in enumerate(dataframes[0].iterrows()):
         first_row = row[1]
         columns = []
         new_group = False
@@ -76,16 +106,18 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                     if(attr == attribute): break
                 columns.append(f"\multirow{{{occurence_dict[','.join(occ_keys)]}}}{{{'*'}}}{{{first_row[attribute]}}}") 
             else: columns.append("")
-        for df in dataframes:
+        for j, df in enumerate(dataframes):
             for attribute in actual_header: 
                 if(attribute not in currents):
                     row_ = df
                     for attr, val in currents.items():
                         row_ = row_[row_[attr] == val]
+                    highlight_str =  f"\cellcolor{{{highlight_colors[attribute]}}}" if attribute in highlight_cols and i in highlights[attribute] and j in highlights[attribute][i] else ""
                     if(row_.empty): 
-                        columns.append("---")
+                        columns.append(highlight_str + "---")
                     else:
-                        columns.append(row_[attribute].values[0])
+                        columns.append(highlight_str + str(row_[attribute].values[0]))
+
 
         latex_table += " & ".join(columns) + "\\\\ \n"
     
@@ -116,10 +148,11 @@ if __name__ == "__main__":
     if(len(sys.argv) > 5):
         include_entries = [int(x) for x in sys.argv[4].split(",")]
 
-    upper_header = ["$1(R+I)$", "$X(R+I), \lambda = 0.1$", "$X(R+I), \lambda = 0.2$", "$X(R+I), \lambda = 2.00$", "$NSWAP$"]
+    upper_header = ["$1(R+I)$", "$X(R+I), \lambda = 0.1$", "$X(R+I), \lambda = 0.2$", "$X(R+I), \lambda = 2$", "$N-SWAP$"]
     grouping = ['mu', 'n', 'm']
     grouping_header = ["$\mu$", "$n$", "$m$"]
     decimal_columns = ['diversity']
+    highlight_cols, exclude_rows, highlight_max, highlight_colors = [], {}, False, {}
     if(constrained):
         grouping.append('alpha')
         grouping_header.append("$\\alpha$")
@@ -141,9 +174,13 @@ if __name__ == "__main__":
         columns = grouping + ['diversity', 'diversity_not_1']
         decimal_columns += ['diversity_not_1']
     elif(table_type == "robustness"):
-        header = grouping_header + ["$D_0$", "$R_{\%}$", "$R_{avg}$"]
-        columns = grouping + ['diversity', 'Perc_rob_test_0', 'Mean_rob_test_0']
-        decimal_columns += ['Perc_rob_test_0', 'Mean_rob_test_0']
+        header = grouping_header + ["$D_0$", "$R1_{\%}$", "$R2_{\%}$"]
+        columns = grouping + ['diversity', 'Perc_rob_test_0', 'Perc_rob_test_1']
+        decimal_columns += ['Perc_rob_test_0', 'Perc_rob_test_1']
+        highlight_cols, exclude_rows = ['Perc_rob_test_0', 'Perc_rob_test_1'], {"init": "True"}
+        highlight_max = True
+        highlight_colors = {'Perc_rob_test_0': 'lightgray', 'Perc_rob_test_1': 'gray'}
+        
     else:
         print("Invalid table type")
         exit(1)
@@ -165,6 +202,6 @@ if __name__ == "__main__":
             f"results/out_rob_Mu1-{'' if constrained else 'un'}const_NSWAP_summary.csv"    
         ]
     
-    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, include_entries)
+    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, include_entries)
     with open(outputfile, 'w') as f:
         f.write(table)
