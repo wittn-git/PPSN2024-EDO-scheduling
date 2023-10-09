@@ -9,8 +9,9 @@ if __name__ == "__main__":
     
     constrained = sys.argv[1] == "True"
 
-    input_file = f"output_mu1-{'' if constrained else 'un'}const_robustness.csv"
-    output_file = f"output_mu1-{'' if constrained else 'un'}const_robustness_shortend.csv"
+    folder_path = "../data/robustness_experiments/"
+    input_file = folder_path + f"output_mu1-{'' if constrained else 'un'}const_robustness.csv"
+    output_file = folder_path + f"output_mu1-{'' if constrained else 'un'}const_robustness_shortend.csv"
 
     df = pd.read_csv(input_file)
     df = df.drop_duplicates()

@@ -20,20 +20,37 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
     if(len(merged_df) != 0):
         result.append(("Number of datapoints: ", str(len(merged_df))))
         result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))  
-        valid_robustness_tests = 0
-        positive_robustness_tests_init, positive_robustness_tests_notinit = 0, 0
-        for row in merged_df.iterrows():
-            for i in range(tests_n):
-                if(row[1][f'rob_test_{i}'] >= -1 and row[1]['init'] == 1):
-                    valid_robustness_tests += 1
-                if(row[1][f'rob_test_{i}'] >= 0):
+        for i in range(tests_n):
+            valid_robustness_tests = 0
+            positive_robustness_tests_init, positive_robustness_tests_notinit = 0, 0
+            noinit_better_init = 0
+            init_better_noinit = 0
+            init_equal_noinit = 0
+            for row in merged_df.iterrows():
+                    if(row[1][f'rob_test_{i}'] >= -1 and row[1]['init'] == 1):
+                        valid_robustness_tests += 1
+                    if(row[1][f'rob_test_{i}'] >= 0):
+                        if(row[1]['init'] == 1):
+                            positive_robustness_tests_init += 1
+                        else:
+                            positive_robustness_tests_notinit += 1
                     if(row[1]['init'] == 1):
-                        positive_robustness_tests_init += 1
-                    else:
-                        positive_robustness_tests_notinit += 1
-        result.append(("Number of valid robustness tests: ", str(valid_robustness_tests)))
-        result.append(("Percentage of positive tests (init): ", str(positive_robustness_tests_init/valid_robustness_tests)))
-        result.append(("Percentage of positive tests (not init): ", str(positive_robustness_tests_notinit/valid_robustness_tests)))
+                        row_ = merged_df
+                        for attr in grouping_columns:
+                            row_ = row_[row_[attr] == row[attr]]
+                        row_ = row_[0]
+                        if(row[1][f'rob_test_{i}'] == -1 and row_[1][f'rob_test_{i}'] == -1):
+                            init_equal_noinit += 1
+                        elif(row[1][f'rob_test_{i}'] == -1 and row_[1][f'rob_test_{i}'] > -1):
+                            noinit_better_init += 1
+                        elif(row[1][f'rob_test_{i}'] > -1 and row_[1][f'rob_test_{i}'] == -1):
+                            init_better_noinit += 1
+                        
+            result.append((f"Percentage of positive tests (init), R{i+1}: ", str(positive_robustness_tests_init/valid_robustness_tests)))
+            result.append((f"Percentage of positive tests (not init), R{i+1}: ", str(positive_robustness_tests_notinit/valid_robustness_tests)))
+            result.append((f"Percentage of tests where init not successfull, but noinit, R{i+1}: ", str(noinit_better_init/valid_robustness_tests)))
+            result.append((f"Percentage of tests where noinit not successfull, but init, R{i+1}: ", str(init_better_noinit/valid_robustness_tests)))
+            result.append((f"Percentage of tests where both not successfull, R{i+1}: ", str(init_equal_noinit/valid_robustness_tests)))
 
     result_str = ""
 
