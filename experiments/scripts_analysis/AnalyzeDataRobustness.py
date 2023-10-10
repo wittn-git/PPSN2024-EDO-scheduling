@@ -17,11 +17,13 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
     result.append((f"(After here: removed groups with unequal to {runs} occurrences and without duplicates)", ""))
     merged_df.drop_duplicates()
     merged_df = merged_df[merged_df['occurrences'] == runs]
+    print(mutation)
     if(len(merged_df) != 0):
         result.append(("Number of datapoints: ", str(len(merged_df))))
         result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))  
         for i in range(tests_n):
             valid_robustness_tests = 0
+            init_tests, no_init_tests = 0,0 
             positive_robustness_tests_init, positive_robustness_tests_notinit = 0, 0
             noinit_better_init = 0
             init_better_noinit = 0
@@ -30,30 +32,40 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
                     if(row[1][f'rob_test_{i}'] >= -1 and row[1]['init'] == 1):
                         valid_robustness_tests += 1
                     if(row[1][f'rob_test_{i}'] >= 0):
-                        if(row[1]['init'] == 1):
+                        if(row[1]['init'] == True):
                             positive_robustness_tests_init += 1
                         else:
                             positive_robustness_tests_notinit += 1
-                    if(row[1]['init'] == 1):
+                    if(row[1]['init'] == True):
+                        init_tests += 1
                         row_ = merged_df
-                        for attr in grouping_columns:
-                            row_ = row_[row_[attr] == row[attr]]
-                        row_ = row_[0]
-                        if(row[1][f'rob_test_{i}'] == -1 and row_[1][f'rob_test_{i}'] == -1):
+                        new_grouping = [attr for attr in grouping_columns if attr != 'init'] + ['run']
+                        for attr in new_grouping:
+                            row_ = row_[row_[attr] == row[1][attr]]
+                        row_ = row_[row_['init'] == False]
+                        row_ = row_.iloc[0]
+                        if(row[1][f'rob_test_{i}'] == -1 and row_[f'rob_test_{i}'] == -1):
                             init_equal_noinit += 1
-                        elif(row[1][f'rob_test_{i}'] == -1 and row_[1][f'rob_test_{i}'] > -1):
+                        elif(row[1][f'rob_test_{i}'] == -1 and row_[f'rob_test_{i}'] > -1):
                             noinit_better_init += 1
-                        elif(row[1][f'rob_test_{i}'] > -1 and row_[1][f'rob_test_{i}'] == -1):
+                        elif(row[1][f'rob_test_{i}'] > -1 and row_[f'rob_test_{i}'] == -1):
                             init_better_noinit += 1
-                        
+                    else:
+                        no_init_tests += 1
+
+            result.append((f"Number of valid robustness tests, R{i+1}: ", str(valid_robustness_tests)))
+            result.append((f"Number of tests (init) R{i+1}: ", str(init_tests)))
+            result.append((f"Number of tests where (not init), R{i+1}: ", str(no_init_tests)))
             result.append((f"Percentage of positive tests (init), R{i+1}: ", str(positive_robustness_tests_init/valid_robustness_tests)))
             result.append((f"Percentage of positive tests (not init), R{i+1}: ", str(positive_robustness_tests_notinit/valid_robustness_tests)))
             result.append((f"Percentage of tests where init not successfull, but noinit, R{i+1}: ", str(noinit_better_init/valid_robustness_tests)))
             result.append((f"Percentage of tests where noinit not successfull, but init, R{i+1}: ", str(init_better_noinit/valid_robustness_tests)))
             result.append((f"Percentage of tests where both not successfull, R{i+1}: ", str(init_equal_noinit/valid_robustness_tests)))
-
+            print(positive_robustness_tests_notinit/valid_robustness_tests, init_better_noinit/valid_robustness_tests, noinit_better_init/valid_robustness_tests)
+    
     result_str = ""
-
+    print()
+    
     max_lengths = [max(len(str(item)) for item in tpl) for tpl in zip(*result)]
     for tpl in result:
         formatted_items = [item.ljust(max_length) for item, max_length in zip(tpl, max_lengths)]

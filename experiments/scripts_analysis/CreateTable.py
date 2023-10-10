@@ -15,8 +15,18 @@ def format_int(value):
     except ValueError:
         return value
 
-def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, include_entries=[], scriptsize=True):
+def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries=[], scriptsize=True):
+    
     dataframes = [pd.read_csv(file) for file in csv_file]
+    # const size filters
+    '''for i, df in enumerate(dataframes):
+        dataframes[i] = df[df['mu'] <= 10]
+        dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 50))]
+        dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 25) & (dataframes[i]['m'] > 1))]'''
+    for i, df in enumerate(dataframes):
+        dataframes[i] = df[df['mu'] >= 10]
+        dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] < 50))]
+        dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] == 50) & (dataframes[i]['m'] == 1))]
     for i, df in enumerate(dataframes):
         sorting_ascending = [False if x == 'init' else True for x in grouping_attributes]
         dataframes[i] = df.sort_values(by=grouping_attributes, ascending=sorting_ascending).reset_index().drop(columns=['index'])
@@ -40,7 +50,9 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
     latex_table += "\\renewcommand{\\tabcolsep}{4pt}\n"
     latex_table += " \\renewcommand{\\arraystretch}{1.1}\n"
     if scriptsize: latex_table += " \\begin{scriptsize}\n"
-    latex_table += f" \\begin{{{'tabular'}}}{{{'r'*(len(grouping_attributes)+len(ungrouped_header) * len(dataframes))}}}\n"
+    if("max_perc" in decimal_columns):
+        latex_table += "\\begin{tabular}{*{" + str((len(grouping_attributes)+len(ungrouped_header) * len(dataframes))) + "}{>{\\raggedleft\\arraybackslash}p{1cm}}}"
+    else: latex_table += f" \\begin{{{'tabular'}}}{{{'r'*(len(grouping_attributes)+len(ungrouped_header) * len(dataframes))}}}\n"
     latex_table += " \\toprule\n"
     latex_table += f"\multicolumn{{{len(grouping_header)}}}{{{'c'}}}{{{''}}}" 
     for header in upper_header:
@@ -79,6 +91,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                 mask = pd.Series(True, index=df.index)
                 for attribute, value in zip(grouping_attributes, group_values):
                     mask = mask & (df[attribute] == value)
+                if(df[mask].empty): continue
                 current_x = df[mask][col].values[0]
                 if max_x is None or (current_x > max_x and highlight_max) or (current_x < max_x and not highlight_max):
                     max_x = current_x
@@ -122,6 +135,10 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
         latex_table += " & ".join(columns) + "\\\\ \n"
     
     latex_table += " \\bottomrule\n"
+    latex_table += f"\multicolumn{{{len(grouping_attributes)+len(ungrouped_header) * len(dataframes)}}}{{{'l'}}}" + "{"
+    for i, header in enumerate(ungrouped_header):
+        latex_table += header + " " + description[i] + (", " if i < len(ungrouped_header)-1 else "")
+    latex_table += "} \\\\ \n"
     latex_table += "  \end{tabular}\n"
     if scriptsize: latex_table += " \end{scriptsize}\n"
     latex_table += " \end{center}\n"
@@ -153,6 +170,7 @@ if __name__ == "__main__":
     grouping_header = ["$\mu$", "$n$", "$m$"]
     decimal_columns = ['diversity']
     highlight_cols, exclude_rows, highlight_max, highlight_colors = [], {}, False, {}
+    description = []
     if(constrained):
         grouping.append('alpha')
         grouping_header.append("$\\alpha$")
@@ -165,27 +183,40 @@ if __name__ == "__main__":
         header = grouping_header + ["$D_0$", "$OBJ$", "$OPT$"]
         columns = grouping + ['diversity', 'fitness', 'opt']
         decimal_columns += ['fitness', 'opt']
+        highlight_cols = ['fitness']
+        highlight_max = False
+        highlight_colors = {'fitness': 'lightgray'}
+        description = ['diversity', 'objective value', '(approximated) optimal value']
     elif(table_type == "time"):
         header = grouping_header + ["$D_0$", "\\textbf{mean}", "\\textbf{std}"]
         columns = grouping + ['diversity', 'generations', 'std_generations']
         decimal_columns += ['std_generations', 'generations']
+        highlight_cols = ['generations']
+        highlight_max = False
+        highlight_colors = {'generations': 'lightgray'}
+        description = ['diversity', 'mean number of generations', 'standard deviation of number of generations']
     elif(table_type == "diversity"):
-        header = grouping_header + ["$D_0$", "$Dx$"]
-        columns = grouping + ['diversity', 'diversity_not_1']
-        decimal_columns += ['diversity_not_1']
+        header = grouping_header + ["$D_0$", "$D_{x}$"]
+        columns = grouping + ['diversity', 'max_perc']
+        decimal_columns += ['diversity', 'max_perc']
+        highlight_cols = ['diversity']
+        highlight_max = True
+        highlight_colors = {'diversity': 'lightgray'}
+        description = ['diversity', 'percentage of cases where diversity is max']
     elif(table_type == "robustness"):
-        header = grouping_header + ["$D_0$", "$R1_{\%}$", "$R2_{\%}$"]
+        header = grouping_header + ["$D_0$", "$R_1$", "$R_2$"]
         columns = grouping + ['diversity', 'Perc_rob_test_0', 'Perc_rob_test_1']
         decimal_columns += ['Perc_rob_test_0', 'Perc_rob_test_1']
         highlight_cols, exclude_rows = ['Perc_rob_test_0', 'Perc_rob_test_1'], {"init": "True"}
         highlight_max = True
         highlight_colors = {'Perc_rob_test_0': 'lightgray', 'Perc_rob_test_1': 'gray'}
+        description = ['diversity', 'percentage of successful tests with one constraint', 'percentage of successful tests with two constraints']
         
     else:
         print("Invalid table type")
         exit(1)
     
-    if(table_type == "fitness" or table_type == "running_time" or table_type == "diversity"):
+    if(table_type == "fitness" or table_type == "time" or table_type == "diversity"):
         csv_files = [            
             f"results/out_Mu1-{'' if constrained else 'un'}const_1RAI_summary.csv",
             f"results/out_Mu1-{'' if constrained else 'un'}const_XRAI_0.100000_summary.csv",
@@ -202,6 +233,6 @@ if __name__ == "__main__":
             f"results/out_rob_Mu1-{'' if constrained else 'un'}const_NSWAP_summary.csv"    
         ]
     
-    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, include_entries)
+    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries)
     with open(outputfile, 'w') as f:
         f.write(table)
