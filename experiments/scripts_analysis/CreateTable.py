@@ -6,6 +6,15 @@ def format_float(value):
         return '{:.2f}'.format(float(value))
     except ValueError:
         return value
+
+def format_doublefloat(value):
+    try:
+        string = '{:.4f}'.format(float(value))
+        if(string == "1.0000" and value < 1):
+            return "0.9999"
+        return string
+    except ValueError:
+        return value
     
 def format_int(value):
     if isinstance(value, bool):
@@ -15,18 +24,22 @@ def format_int(value):
     except ValueError:
         return value
 
-def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries=[], scriptsize=True):
+def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries=[], scriptsize=True):
     
     dataframes = [pd.read_csv(file) for file in csv_file]
     # const size filters
-    '''for i, df in enumerate(dataframes):
+    '''
+    for i, df in enumerate(dataframes):
         dataframes[i] = df[df['mu'] <= 10]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 50))]
-        dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 25) & (dataframes[i]['m'] > 1))]'''
+        dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 25) & (dataframes[i]['m'] > 1))]
+    '''
     for i, df in enumerate(dataframes):
         dataframes[i] = df[df['mu'] >= 10]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] < 50))]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] == 50) & (dataframes[i]['m'] == 1))]
+    
+
     for i, df in enumerate(dataframes):
         sorting_ascending = [False if x == 'init' else True for x in grouping_attributes]
         dataframes[i] = df.sort_values(by=grouping_attributes, ascending=sorting_ascending).reset_index().drop(columns=['index'])
@@ -41,6 +54,8 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
         for i, df in enumerate(dataframes):
             if(column in decimal_columns):
                 dataframes[i][column] = df[column].apply(format_float)
+            elif(column in double_decimal_columns):
+                dataframes[i][column] = df[column].apply(format_doublefloat)
             else:
                 dataframes[i][column] = df[column].apply(format_int)
 
@@ -168,7 +183,8 @@ if __name__ == "__main__":
     upper_header = ["$1(R+I)$", "$X(R+I), \lambda = 0.1$", "$X(R+I), \lambda = 0.2$", "$X(R+I), \lambda = 2$", "$N-SWAP$"]
     grouping = ['mu', 'n', 'm']
     grouping_header = ["$\mu$", "$n$", "$m$"]
-    decimal_columns = ['diversity']
+    decimal_columns = []
+    double_decimal_columns = ['diversity']
     highlight_cols, exclude_rows, highlight_max, highlight_colors = [], {}, False, {}
     description = []
     if(constrained):
@@ -198,7 +214,7 @@ if __name__ == "__main__":
     elif(table_type == "diversity"):
         header = grouping_header + ["$D_0$", "$D_{x}$"]
         columns = grouping + ['diversity', 'max_perc']
-        decimal_columns += ['diversity', 'max_perc']
+        decimal_columns += ['max_perc']
         highlight_cols = ['diversity']
         highlight_max = True
         highlight_colors = {'diversity': 'lightgray'}
@@ -233,6 +249,6 @@ if __name__ == "__main__":
             f"results/out_rob_Mu1-{'' if constrained else 'un'}const_NSWAP_summary.csv"    
         ]
     
-    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries)
+    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries)
     with open(outputfile, 'w') as f:
         f.write(table)

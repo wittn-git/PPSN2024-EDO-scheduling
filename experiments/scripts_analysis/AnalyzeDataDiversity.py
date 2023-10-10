@@ -23,7 +23,8 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
         result.append(("Number of datapoints: ", str(len(merged_df))))
         result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))    
 
-        result.append(("Ratio of max diversity reached: ", str(len(merged_df[merged_df['diversity'] == 1]) / len(merged_df))))
+        result.append(("Ratio of max diversity reached (m=1): ", str(len(merged_df[(merged_df['diversity'] == 1) & (merged_df['m'] == 1)]) / len(merged_df[merged_df['m'] == 1]))))
+        result.append(("Ratio of max diversity reached (all m): ", str(len(merged_df[merged_df['diversity'] == 1]) / len(merged_df))))
 
         result.append(("Average generation ratio (cases with only max diversity): ", str(merged_df[merged_df['diversity'] == 1]['mean_generations_ratio'].mean())))
         result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 1) & (merged_df['diversity_grouped'] == 1)]['mean_generations_ratio'].mean())))
@@ -54,7 +55,7 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
 def max_perc(rows):
     absolute = 0
     for i, row in rows.iterrows():
-        if(row[f'diversity'] == 1): absolute += 1 
+        if(row['diversity'] == 1): absolute += 1 
     return absolute / len(rows)
 
 def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
