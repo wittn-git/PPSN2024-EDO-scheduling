@@ -41,12 +41,17 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
         formatted_items = [item.ljust(max_length) for item, max_length in zip(tpl, max_lengths)]
         result_str += ' | '.join(formatted_items) + "\n"
 
-    result_str += "\n" + "Value combinations with not only max diversity:\n" + str(grouped_df[grouped_df['diversity'] != 100][grouping_columns]) + "\n\n"
+    result_str += "\n" + "Value combinations with not only max diversity:\n" + str(grouped_df[grouped_df['diversity'] != 1][grouping_columns]) + "\n\n"
 
     if('alpha' in grouping_columns):
-        result_str += "Percentage of cases where diversity is 1:\n"
+        result_str += "Percentage of cases where diversity is 1:, m = 1 \n"
         for alpha in merged_df['alpha'].unique():
-            result_str += "alpha: " + str(alpha) + ": " + str(len(merged_df[(merged_df['alpha'] == alpha) & (merged_df['diversity'] == 100)]) / len(merged_df[(merged_df['alpha'] == alpha)])) + "\n"
+            result_str += "alpha: " + str(alpha) + ": " + str(len(merged_df[(merged_df['alpha'] == alpha) & (merged_df['diversity'] == 1) & (merged_df['m'] == 1)]) / len(merged_df[(merged_df['alpha'] == alpha) & (merged_df['m'] == 1)])) + "\n"
+    
+    if('alpha' in grouping_columns):
+        result_str += "Percentage of cases where diversity is 1:, m >= 1 \n"
+        for alpha in merged_df['alpha'].unique():
+            result_str += "alpha: " + str(alpha) + ": " + str(len(merged_df[(merged_df['alpha'] == alpha) & (merged_df['diversity'] == 1)]) / len(merged_df[(merged_df['alpha'] == alpha)])) + "\n"
 
     result_str += "\n" + "Value combinations with their occurrences:\n" + str(grouped_df[grouping_columns + ['occurrences']]) + "\n\n"
 

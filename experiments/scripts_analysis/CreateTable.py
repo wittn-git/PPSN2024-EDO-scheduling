@@ -1,5 +1,6 @@
 import pandas as pd
 import sys
+from icecream import *
 
 def format_float(value):
     try:
@@ -33,12 +34,11 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
         dataframes[i] = df[df['mu'] <= 10]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 50))]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 25) & (dataframes[i]['m'] > 1))]
-    '''
     for i, df in enumerate(dataframes):
         dataframes[i] = df[df['mu'] >= 10]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] < 50))]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] == 50) & (dataframes[i]['m'] == 1))]
-    
+    '''
 
     for i, df in enumerate(dataframes):
         sorting_ascending = [False if x == 'init' else True for x in grouping_attributes]
@@ -107,7 +107,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                 for attribute, value in zip(grouping_attributes, group_values):
                     mask = mask & (df[attribute] == value)
                 if(df[mask].empty): continue
-                current_x = df[mask][col].values[0]
+                current_x = float(df[mask][col].values[0])
                 if max_x is None or (current_x > max_x and highlight_max) or (current_x < max_x and not highlight_max):
                     max_x = current_x
                     max_x_idx = [idx]
