@@ -7,9 +7,10 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
     df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
     df = df.copy()
     df['mean_generations_ratio'] = df['generations'] / df['max_generations']
-    if(constrained): df['fitness_worse_than_opt'] = df['fitness'] < df['opt']
+    if(constrained): 
+        df['fitness_worse_than_opt'] = df['fitness'] > df['opt']
+        df['better_than_opt'] = df['fitness'] < df['opt']
     merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
-    merged_df['diversity'] = merged_df['diversity']
     
     result = []
     result.append(("Number of datapoints: ", str(len(merged_df))))
@@ -31,8 +32,19 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
         result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 1]['mean_generations_ratio'].mean())))
         result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 1 & (merged_df['diversity_grouped'] < 1)]['mean_generations_ratio'].mean())))
 
-        if(constrained): result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
-        if(constrained): result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 1) & (merged_df['fitness_worse_than_opt'] == 0)]) / len(merged_df))))
+        result.append(("Average generation ratio (cases with only max diversity) m = 1: ", str(merged_df[(merged_df['diversity'] == 1) & (merged_df['m'] == 1)]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with only max diversity) m = 1: ", str(merged_df[(merged_df['diversity'] == 1) & (merged_df['diversity_grouped'] == 1) & (merged_df['m'] == 1) ]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity) m = 1: ", str(merged_df[(merged_df['diversity_grouped'] < 1) & (merged_df['m'] == 1)]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity) m = 1: ", str(merged_df[(merged_df['diversity']) == 1 & (merged_df['diversity_grouped'] < 1) & (merged_df['m'] == 1)]['mean_generations_ratio'].mean())))
+
+        if(constrained):
+            result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == False)]) / len(merged_df))))
+            result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 1) & (merged_df['fitness_worse_than_opt'] == False)]) / len(merged_df[merged_df['diversity'] == 1]))))
+            result.append(("Percentage of cases where fitness is not worse than opt (m=1): ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == False) & (merged_df['m'] == 1)]) / len(merged_df[(merged_df['m'] == 1)]))))
+            result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt (m=1): ", str(len(merged_df[(merged_df['diversity'] == 1) & (merged_df['fitness_worse_than_opt'] == False) & (merged_df['m'] == 1)]) / len(merged_df[(merged_df['diversity'] == 1) & (merged_df['m'] == 1)]))))
+            result.append(("Cases found where the solution is better than opt: ", str(len(merged_df[(merged_df['better_than_opt'] == True)]))))
+
+
 
     result_str = ""
 
@@ -78,7 +90,6 @@ def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
     summary = grouped.agg(aggregation_dict).reset_index()
 
     summary['std_generations'] = grouped['generations'].std().reset_index(drop=True)
-    if(constrained): summary['fitness_worse_than_opt'] = grouped.apply(lambda x: (x['fitness'] < x['opt']).sum() / len(x)).reset_index(drop=True)
     summary['max_perc'] = grouped.apply(max_perc).reset_index(drop=True)
     summary['mean_generations_ratio'] = summary['generations'] / summary['max_generations']
     if(constrained): summary['fitness_worse_than_opt'] = summary['fitness'] > summary['opt'] 
