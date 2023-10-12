@@ -9,8 +9,11 @@ def f(x):
 
 def make_plot(outputfile):
 
+    plt.rcParams.update({'font.size': 14})
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     fig.subplots_adjust(wspace=0.5, right=0.9, left= 0.1)
+
+    
 
     for i, axis in enumerate(axes):
         x = np.linspace(0, 10, 100)

@@ -8,7 +8,8 @@ def make_plot(input_file, output_file, constrained, combinations):
     grouped = df.groupby(['mu', 'n', 'run'])
     mutation_labels = {'1RAI': '1(R+I)', 'XRAI_0.100000': 'X(R+I), λ = 0.1', 'XRAI_0.200000': 'X(R+I), λ = 0.2', "XRAI_2.000000": 'X(R+I), λ = 2', 'NSWAP': 'N-SWAP'}
 
-    fig, axes = plt.subplots(1, len(combinations), figsize=(15, 5))
+    plt.rcParams.update({'font.size': 14})
+    fig, axes = plt.subplots(1, len(combinations), figsize=(16, 5))
     if len(combinations) == 1: axes = [axes]
 
     for i, entry in enumerate(combinations):

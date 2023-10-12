@@ -6,6 +6,9 @@ from icecream import ic
 import seaborn as sns
 
 def make_plot(input_file, outputfile, constrained, div):
+
+    plt.rcParams.update({'font.size': 17})
+
     df = pd.read_csv(input_file)
     if(div == 'max'):
         df = df[df['diversity'] == 1]
@@ -32,7 +35,7 @@ def make_plot(input_file, outputfile, constrained, div):
         n_values = filtered_df['n'].unique()
         n_values.sort()
         mu_values = [len(filtered_df[(filtered_df['n'] == n)]['mu'].unique()) for n in n_values]
-        fig = plt.figure(figsize=(20, 6)) 
+        fig = plt.figure(figsize=(20, 7)) 
         gs = gridspec.GridSpec(1, len(n_values), width_ratios=mu_values)
         axes = [plt.subplot(gs[i]) for i in range(len(n_values))]
         for i, n in enumerate(n_values):
@@ -47,7 +50,7 @@ def make_plot(input_file, outputfile, constrained, div):
         handles, labels = axes[0].get_legend_handles_labels()
         fig.legend(handles, mutation_labels_, loc='upper center', title='Operator', ncol=5 if group[0] == 1 else 4, bbox_to_anchor=(0.5, 1), bbox_transform=plt.gcf().transFigure) 
         for i in range(len(n_values)): axes[i].get_legend().remove()
-        plt.tight_layout(rect=[0, 0, 1, 0.9])
+        plt.tight_layout(rect=[0, 0, 1, 0.88])
         plt.savefig(f'{outputfile}_{group}.png')
         plt.close()
 
