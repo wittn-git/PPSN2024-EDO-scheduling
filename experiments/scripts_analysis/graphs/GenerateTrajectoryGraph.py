@@ -16,6 +16,7 @@ def make_plot(input_file, output_file, constrained, combinations):
         custom_colors = ["#BA55D3","#B0E0E6","#C71585", "#513566", "#7B68EE"]
         color_cycle = itertools.cycle(custom_colors)
         for (mu, n, run), group in grouped:
+            print(mu, n, run)
             if(mu not in entry['mu'] or n not in entry['n'] or run not in entry['run']): continue
 
             if(constrained):
@@ -74,10 +75,10 @@ if __name__ == "__main__":
         },
         {
             "mu": [10],
-            "n": [10],
-            "run": [11],
+            "n": [25],
+            "run": [1],
             "alpha": [0.1, 0.3, 0.6],
-            "operator": ['XRAI_0.100000'],
+            "operator": ['1RAI'],
             "m": [1]
         },
         {
