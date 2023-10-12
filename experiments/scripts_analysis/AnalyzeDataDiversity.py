@@ -8,8 +8,8 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
     df = df.copy()
     df['mean_generations_ratio'] = df['generations'] / df['max_generations']
     if(constrained): 
-        df['fitness_worse_than_opt'] = df['fitness'] > df['opt']
-        df['better_than_opt'] = df['fitness'] < df['opt']
+        df['betterequal_than_opt'] = df['fitness'] <= df['opt']
+        df['tardy_share'] = df['fitness'] / df['n']
     merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
     
     result = []
@@ -38,12 +38,17 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
         result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity) m = 1: ", str(merged_df[(merged_df['diversity']) == 1 & (merged_df['diversity_grouped'] < 1) & (merged_df['m'] == 1)]['mean_generations_ratio'].mean())))
 
         if(constrained):
-            result.append(("Percentage of cases where fitness is not worse than opt: ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == False)]) / len(merged_df))))
-            result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt: ", str(len(merged_df[(merged_df['diversity'] == 1) & (merged_df['fitness_worse_than_opt'] == False)]) / len(merged_df[merged_df['diversity'] == 1]))))
-            result.append(("Percentage of cases where fitness is not worse than opt (m=1): ", str(len(merged_df[(merged_df['fitness_worse_than_opt'] == False) & (merged_df['m'] == 1)]) / len(merged_df[(merged_df['m'] == 1)]))))
-            result.append(("Percentage of cases where diversity is 1 and fitness is not worse than opt (m=1): ", str(len(merged_df[(merged_df['diversity'] == 1) & (merged_df['fitness_worse_than_opt'] == False) & (merged_df['m'] == 1)]) / len(merged_df[(merged_df['diversity'] == 1) & (merged_df['m'] == 1)]))))
-            result.append(("Cases found where the solution is better than opt: ", str(len(merged_df[(merged_df['better_than_opt'] == True)]))))
-
+            for alpha in [0.1]:
+                filtered_df = merged_df[merged_df['alpha'] == alpha]
+                result.append(("", ""))
+                result.append((f"Percentage of cases where OBJ<=OPT, alpha={alpha}: ", str(len(filtered_df[(filtered_df['betterequal_than_opt'] == True)]) / len(filtered_df))))
+                result.append((f"Percentage of cases where diversity is 1 and OBJ<=OPT, alpha={alpha}: ", str(len(filtered_df[(filtered_df['diversity'] == 1) & (filtered_df['betterequal_than_opt'] == True)]) / len(filtered_df[filtered_df['diversity'] == 1]))))
+                result.append((f"Percentage of cases OBJ<=OPT (m=1), alpha={alpha}: ", str(len(filtered_df[(filtered_df['betterequal_than_opt'] == True) & (filtered_df['m'] == 1)]) / len(filtered_df[(filtered_df['m'] == 1)]))))
+                result.append((f"Percentage of cases where diversity is 1 and OBJ<=OPT (m=1), alpha={alpha}: ", str(len(filtered_df[(filtered_df['diversity'] == 1) & (filtered_df['betterequal_than_opt'] == True) & (filtered_df['m'] == 1)]) / len(filtered_df[(filtered_df['diversity'] == 1) & (filtered_df['m'] == 1)]))))
+                result.append((f"Average tardy_share, alpha={alpha}: ", str(filtered_df['tardy_share'].mean())))
+                result.append((f"Average tardy_share (cases with only max diversity), alpha={alpha}: ", str(filtered_df[filtered_df['diversity'] == 1]['tardy_share'].mean())))
+                result.append((f"Average tardy_share, m=1, alpha={alpha}: ", str(filtered_df[(filtered_df['m'] == 1)]['tardy_share'].mean())))
+                result.append((f"Average tardy_share (cases with only max diversity), m=1, alpha={alpha}: ", str(filtered_df[(filtered_df['diversity'] == 1) & (filtered_df['m'] == 1)]['tardy_share'].mean())))
 
 
     result_str = ""
