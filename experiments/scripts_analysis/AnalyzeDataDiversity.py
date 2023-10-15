@@ -2,24 +2,24 @@ import sys
 from tabulate import tabulate
 import pandas as pd
 
-def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, mutation, constrained):
+def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, mutation, constrained, non_max_divs_1, non_max_divs_a):
 
-    df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
-    df = df.copy()
-    df['mean_generations_ratio'] = df['generations'] / df['max_generations']
+    df_cp = df.copy() 
+    df_cp = df_cp[(df_cp['algorithm'] == algorithm) & (df_cp['mutation'] == mutation)]
+    df_cp = df_cp.drop_duplicates()
+    
+    df_cp['mean_generations_ratio'] = df_cp['generations'] / df_cp['max_generations']
     if(constrained): 
-        df['betterequal_than_opt'] = df['fitness'] <= df['opt']
-        df['tardy_share'] = df['fitness'] / df['n']
-    merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
+        df_cp['betterequal_than_opt'] = df_cp['fitness'] <= df_cp['opt']
+        df_cp['tardy_share'] = df_cp['fitness'] / df_cp['n']
+    merged_df = df_cp.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
     
     result = []
     result.append(("Number of datapoints: ", str(len(merged_df))))
-    result.append(("Number of duplicate datapoints: ", str(len(merged_df) - len(merged_df.drop_duplicates()))))
     result.append(("Number of value combinations: ", str(len(grouped_df))))
 
-    result.append((f"(After here: removed groups with unequal to {runs} occurrences and without duplicates)", ""))
-    merged_df.drop_duplicates()
     merged_df = merged_df[merged_df['occurrences'] == runs]
+    
     if(len(merged_df) != 0):
         result.append(("Number of datapoints: ", str(len(merged_df))))
         result.append(("Number of value combinations: ", str(len(grouped_df[grouped_df['occurrences'] == runs]))))    
@@ -29,13 +29,18 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
 
         result.append(("Average generation ratio (cases with only max diversity): ", str(merged_df[merged_df['diversity'] == 1]['mean_generations_ratio'].mean())))
         result.append(("Average generation ratio (combinations with only max diversity): ", str(merged_df[(merged_df['diversity'] == 1) & (merged_df['diversity_grouped'] == 1)]['mean_generations_ratio'].mean())))
-        result.append(("Average generation ratio (combinations with non-max diversity): ", str(merged_df[merged_df['diversity_grouped'] < 1]['mean_generations_ratio'].mean())))
-        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(merged_df[(merged_df['diversity']) == 1 & (merged_df['diversity_grouped'] < 1)]['mean_generations_ratio'].mean())))
+        
 
         result.append(("Average generation ratio (cases with only max diversity) m = 1: ", str(merged_df[(merged_df['diversity'] == 1) & (merged_df['m'] == 1)]['mean_generations_ratio'].mean())))
         result.append(("Average generation ratio (combinations with only max diversity) m = 1: ", str(merged_df[(merged_df['diversity'] == 1) & (merged_df['diversity_grouped'] == 1) & (merged_df['m'] == 1) ]['mean_generations_ratio'].mean())))
-        result.append(("Average generation ratio (combinations with non-max diversity) m = 1: ", str(merged_df[(merged_df['diversity_grouped'] < 1) & (merged_df['m'] == 1)]['mean_generations_ratio'].mean())))
-        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity) m = 1: ", str(merged_df[(merged_df['diversity']) == 1 & (merged_df['diversity_grouped'] < 1) & (merged_df['m'] == 1)]['mean_generations_ratio'].mean())))
+        
+        non_max_div_df_1 = pd.merge(merged_df, non_max_divs_1,  how='inner', on=grouping_columns)
+        non_max_div_df_a = pd.merge(merged_df, non_max_divs_a,  how='inner', on=grouping_columns)
+        result.append(("", ""))
+        result.append(("Average generation ratio (combinations with non-max diversity): ", str(non_max_div_df_a[non_max_div_df_a['diversity_grouped'] < 1]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity): ", str(non_max_div_df_a[(non_max_div_df_a['diversity']) == 1 & (non_max_div_df_a['diversity_grouped'] < 1)]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity) m = 1: ", str(non_max_div_df_1[(non_max_div_df_1['diversity_grouped'] < 1) & (non_max_div_df_1['m'] == 1)]['mean_generations_ratio'].mean())))
+        result.append(("Average generation ratio (combinations with non-max diversity, only cases with max diversity) m = 1: ", str(non_max_div_df_1[(non_max_div_df_1['diversity']) == 1 & (non_max_div_df_1['diversity_grouped'] < 1) & (non_max_div_df_1['m'] == 1)]['mean_generations_ratio'].mean())))
 
         if(constrained):
             for alpha in [0.1]:
@@ -70,8 +75,10 @@ def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, muta
         for alpha in merged_df['alpha'].unique():
             result_str += "alpha: " + str(alpha) + ": " + str(len(merged_df[(merged_df['alpha'] == alpha) & (merged_df['diversity'] == 1)]) / len(merged_df[(merged_df['alpha'] == alpha)])) + "\n"
 
-    result_str += "\n" + "Value combinations with their occurrences:\n" + str(grouped_df[grouping_columns + ['occurrences']]) + "\n\n"
-
+    new_grouped = merged_df.groupby(grouping_columns)
+    occurrences = new_grouped.size().reset_index(name='occurrences')
+    result_str += "\n" + "Value combinations with their occurrences:\n" + str(occurrences[grouping_columns + ['occurrences']]) + "\n\n"
+    
     return result_str
 
 def max_perc(rows):
@@ -82,7 +89,7 @@ def max_perc(rows):
 
 def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
     df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
-    
+
     grouped = df.groupby(grouping_columns)
     occurrences = grouped.size().reset_index(name='occurrences')
     aggregation_dict = {
@@ -97,11 +104,15 @@ def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
     summary['std_generations'] = grouped['generations'].std().reset_index(drop=True)
     summary['max_perc'] = grouped.apply(max_perc).reset_index(drop=True)
     summary['mean_generations_ratio'] = summary['generations'] / summary['max_generations']
+
     if(constrained): summary['fitness_worse_than_opt'] = summary['fitness'] > summary['opt'] 
 
     summary = pd.merge(summary, occurrences, on=grouping_columns)   
 
-    return summary
+    non_max_div = summary[summary['diversity'] != 1]
+    non_max_div = non_max_div[grouping_columns]
+
+    return summary, non_max_div
 
 if(__name__ == "__main__"):
 
@@ -126,12 +137,22 @@ if(__name__ == "__main__"):
     if(mutations != None):
         algorithm_combinations = algorithm_combinations[algorithm_combinations['mutation'].isin(mutations)]
 
+    non_max_divs_1, non_max_divs_a = None, None
+    for _, entry in algorithm_combinations.iterrows():
+        _, non_max_div = get_summary(df, grouping_columns, entry['algorithm'], entry['mutation'], runs, constrained)
+        if non_max_divs_1 is None:
+            non_max_divs_1 = non_max_div
+            non_max_divs_a = non_max_div
+        else:
+            non_max_divs_1 = pd.merge(non_max_divs_1, non_max_div,  how='inner', on=grouping_columns)
+            if(entry['mutation'] != "NSWAP"):
+                non_max_divs_a = pd.merge(non_max_divs_a, non_max_div,  how='inner', on=grouping_columns)
+
     for _, entry in algorithm_combinations.iterrows():
         output_file = output_file_prefix + "_" + entry['algorithm'] + "_" + entry['mutation']
-        summary = get_summary(df, grouping_columns, entry['algorithm'], entry['mutation'], runs, constrained)
+        summary, non_max_div = get_summary(df, grouping_columns, entry['algorithm'], entry['mutation'], runs, constrained)
         summary.to_csv(output_file + "_summary.csv")
         with open(output_file + "_summary.txt", 'w') as f:
             f.write(tabulate(summary, headers='keys', tablefmt='psql'))
-        
         with open(output_file + "_data_information.txt", 'w') as f:
-            f.write(get_data_information(df, summary, grouping_columns, runs, entry['algorithm'], entry['mutation'], constrained))
+            f.write(get_data_information(df, summary, grouping_columns, runs, entry['algorithm'], entry['mutation'], constrained, non_max_divs_1, non_max_divs_a))

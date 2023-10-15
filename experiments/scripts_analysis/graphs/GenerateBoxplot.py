@@ -5,15 +5,37 @@ from matplotlib import gridspec
 from icecream import ic
 import seaborn as sns
 
-def make_plot(input_file, outputfile, constrained, div):
+def make_plot(input_file, outputfile, constrained, div, m, alpha):
 
     plt.rcParams.update({'font.size': 17})
 
     df = pd.read_csv(input_file)
+    df = df[(df['m'] == m)]
+    if(constrained):
+        df = df[(df['alpha'] == alpha)]
+
     if(div == 'max'):
         df = df[df['diversity'] == 1]
-    elif(div == 'all'):
-        pass
+    elif(div == 'non'):
+        non_max_divs = None
+        for mutation in df['mutation'].unique():
+            df_cp = df[(df['mutation'] == mutation)]
+            grouping_cols = ['mu', 'n', 'm']
+            if(constrained):
+                grouping_cols.append('alpha')
+            grouped = df_cp.groupby(grouping_cols)
+            occurrences = grouped.size().reset_index(name='occurrences')
+            summary = grouped.agg({'diversity': "mean"}).reset_index()
+            summary = pd.merge(summary, occurrences, on=grouping_cols)
+            non_max_div = summary[summary['diversity'] != 1][grouping_cols] 
+            if(non_max_divs is None):
+                non_max_divs = non_max_div
+            else:
+                non_max_divs = pd.concat([non_max_divs, non_max_div])
+
+        df = pd.merge(df, non_max_divs,  how='inner', on=grouping_cols)
+
+        df = df[df['diversity'] == 1]
     else:
         print("Invalid diversity option")
         exit(1)
@@ -33,6 +55,7 @@ def make_plot(input_file, outputfile, constrained, div):
             mutation_labels_.append('N-SWAP')
         filtered_df = df[df[groupings[0]] == group[0]]
         n_values = filtered_df['n'].unique()
+        
         n_values.sort()
         mu_values = [len(filtered_df[(filtered_df['n'] == n)]['mu'].unique()) for n in n_values]
         fig = plt.figure(figsize=(20, 7)) 
@@ -48,19 +71,25 @@ def make_plot(input_file, outputfile, constrained, div):
             axes[i].set_title(f'n={n}')
             axes[i].set_ylim(0, 1)
         handles, labels = axes[0].get_legend_handles_labels()
-        fig.legend(handles, mutation_labels_, loc='upper center', title='Operator', ncol=5 if group[0] == 1 else 4, bbox_to_anchor=(0.5, 1), bbox_transform=plt.gcf().transFigure) 
+        fig.legend(handles, mutation_labels_, loc='upper center', title='', ncol=5 if group[0] == 1 else 4, bbox_to_anchor=(0.5, 1), bbox_transform=plt.gcf().transFigure) 
         for i in range(len(n_values)): axes[i].get_legend().remove()
         plt.tight_layout(rect=[0, 0, 1, 0.88])
         plt.savefig(f'{outputfile}_{group}.png')
         plt.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python3 GenerateBoxplot.py <output_file> <constrained> <div>")
+    if len(sys.argv) < 5:
+        print("Usage: python3 GenerateBoxplot.py <output_file> <constrained> <div> <m> <alpha>")
         exit(1)
     
     output_file = sys.argv[1]
     constrained = sys.argv[2] == 'True'
     div = sys.argv[3]
+    m = int(sys.argv[4])
+    if(constrained):
+        alpha = float(sys.argv[5])
+    else:
+        alpha = None
+
     input_file = f"../../data/diversity_experiments/data_mu1-{'' if constrained else 'un'}const.csv"
-    make_plot(input_file, output_file, constrained, div)
+    make_plot(input_file, output_file, constrained, div, m, alpha)

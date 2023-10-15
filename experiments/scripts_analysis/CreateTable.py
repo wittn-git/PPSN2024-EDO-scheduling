@@ -159,12 +159,6 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
     latex_table += " \end{center}\n"
     return latex_table
 
-def get_running_time_table():
-    pass
-
-def get_robustness_table():
-    pass
-
 if __name__ == "__main__":
 
     if len(sys.argv) < 4:
@@ -196,20 +190,20 @@ if __name__ == "__main__":
         grouping_header.append("$init$")
     
     if(table_type == "fitness"):
-        header = grouping_header + ["$D_0$", "$OBJ$", "$OPT$"]
-        columns = grouping + ['diversity', 'fitness', 'opt']
-        decimal_columns += ['fitness', 'opt']
-        highlight_cols = ['fitness']
+        header = grouping_header + ["$D_0$", "$OBJ$", "$O\%$"]
+        columns = grouping + ['diversity', 'fitness', 'max_perc']
+        decimal_columns += ['fitness', 'max_perc']
+        highlight_cols = ['fitness', 'max_perc']
         highlight_max = False
-        highlight_colors = {'fitness': 'lightgray'}
-        description = ['diversity', 'objective value', '(approximated) optimal value']
+        highlight_colors = {'fitness': 'lightgray', 'max_perc': 'gray'}
+        description = ['diversity', 'objective value', 'share of cases where objective value is optimal']
     elif(table_type == "time"):
         header = grouping_header + ["$D_0$", "\\textbf{mean}", "\\textbf{std}"]
-        columns = grouping + ['diversity', 'generations', 'std_generations']
-        decimal_columns += ['std_generations', 'generations']
-        highlight_cols = ['generations']
+        columns = grouping + ['diversity', 'mean_generations_ratio', 'std_generations']
+        decimal_columns += ['std_generations', 'mean_generations_ratio']
+        highlight_cols = ['mean_generations_ratio']
         highlight_max = False
-        highlight_colors = {'generations': 'lightgray'}
+        highlight_colors = {'mean_generations_ratio': 'lightgray'}
         description = ['diversity', 'mean number of generations', 'standard deviation of number of generations']
     elif(table_type == "diversity"):
         header = grouping_header + ["$D_0$", "$D_{x}$"]

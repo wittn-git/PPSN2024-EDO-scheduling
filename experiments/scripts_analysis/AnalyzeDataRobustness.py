@@ -4,18 +4,16 @@ import pandas as pd
 
 def get_data_information(df, grouped_df, grouping_columns, runs, algorithm, mutation, tests_n):
 
-    df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
-    df = df.copy()
+    df_cp = df.copy() 
+    df_cp = df_cp[(df_cp['algorithm'] == algorithm) & (df_cp['mutation'] == mutation)]
+    df_cp = df_cp.drop_duplicates()
     merged_df = df.merge(grouped_df, on=grouping_columns, suffixes=('', '_grouped'))
     merged_df['diversity'] = merged_df['diversity']
     
     result = []
     result.append(("Number of datapoints: ", str(len(merged_df))))
-    result.append(("Number of duplicate datapoints: ", str(len(merged_df) - len(merged_df.drop_duplicates()))))
     result.append(("Number of value combinations: ", str(len(grouped_df))))
-
-    result.append((f"(After here: removed groups with unequal to {runs} occurrences and without duplicates)", ""))
-    merged_df.drop_duplicates()
+    
     merged_df = merged_df[merged_df['occurrences'] == runs]
     print(mutation)
     if(len(merged_df) != 0):
