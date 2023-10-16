@@ -87,6 +87,12 @@ def max_perc(rows):
         if(row['diversity'] == 1): absolute += 1 
     return absolute / len(rows)
 
+def opt_perc(rows):
+    absolute = 0
+    for i, row in rows.iterrows():
+        if(row['fitness'] <= row['opt']): absolute += 1 
+    return absolute / len(rows)
+
 def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
     df = df[(df['algorithm'] == algorithm) & (df['mutation'] == mutation)]
 
@@ -103,7 +109,9 @@ def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
 
     summary['std_generations'] = grouped['generations'].std().reset_index(drop=True)
     summary['max_perc'] = grouped.apply(max_perc).reset_index(drop=True)
+    summary['opt_perc'] = grouped.apply(opt_perc).reset_index(drop=True)
     summary['mean_generations_ratio'] = summary['generations'] / summary['max_generations']
+    if(constrained): summary['opt_diff'] = (summary['fitness'] - summary['opt']) / summary['n']
 
     if(constrained): summary['fitness_worse_than_opt'] = summary['fitness'] > summary['opt'] 
 

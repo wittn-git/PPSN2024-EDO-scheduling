@@ -29,7 +29,7 @@ def make_plot(input_file, output_file, alpha):
     fig, ax = plt.subplots(1, 2, figsize=(10, 5))
     custom_colors = {'1RAI': "#BA55D3", 'XRAI_0.100000': "#B0E0E6", 'XRAI_0.200000': "#C71585", "XRAI_2.000000": "#513566", "NSWAP": "#7B68EE"} 
 
-    noise_level = 0.0
+    noise_level = 0.003
     for mutation in summary['mutation'].unique():
         temp_df = summary[(summary['mutation'] == mutation)]
         x_noise = np.random.normal(0, noise_level, len(temp_df['diversity']))
@@ -38,7 +38,6 @@ def make_plot(input_file, output_file, alpha):
         noisy_div = temp_df['diversity'] + x_noise
         noisy_ratio = temp_df['late_ratio'] + y_noise
         noisy_perc = temp_df['max_perc'] + y_noise
-        # make diversity 1 if it is greater than 1
         noisy_div[noisy_div > 1] = 1
         ax[0].scatter(noisy_div, noisy_ratio, s=3, c=custom_colors[mutation])
         ax[1].scatter(noisy_div, noisy_perc, s=3, c=custom_colors[mutation])

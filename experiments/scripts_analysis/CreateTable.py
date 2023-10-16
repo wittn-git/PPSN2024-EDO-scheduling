@@ -13,6 +13,8 @@ def format_doublefloat(value):
         string = '{:.4f}'.format(float(value))
         if(string == "1.0000" and value < 1):
             return "0.9999"
+        if(string == "0.0000" and value > 0):
+            return "0.0001"
         return string
     except ValueError:
         return value
@@ -25,7 +27,20 @@ def format_int(value):
     except ValueError:
         return value
 
-def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries=[], scriptsize=True):
+def filter_dataframe(df, columns, filtered):
+    filtered_rows = []
+    num_cols = len(columns)
+
+    for tup in filtered:
+        condition = df[columns[0]] == tup[0]
+        for i in range(1, num_cols):
+            condition = condition & (df[columns[i]] == tup[i])
+        filtered_rows.append(df[condition])
+
+    filtered_df = pd.concat(filtered_rows).drop_duplicates().reset_index()
+    return filtered_df
+
+def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, scriptsize=True):
     
     dataframes = [pd.read_csv(file) for file in csv_file]
     # const size filters
@@ -43,13 +58,9 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
     for i, df in enumerate(dataframes):
         sorting_ascending = [False if x == 'init' else True for x in grouping_attributes]
         dataframes[i] = df.sort_values(by=grouping_attributes, ascending=sorting_ascending).reset_index().drop(columns=['index'])
-        if(filtered_mus != []):
-            dataframes[i] = df[df['mu'].isin(filtered_mus)]
+        if(filtered != None):
+            dataframes[i] = filter_dataframe(dataframes[i], grouping_attributes, filtered)
    
-    if(include_entries):
-        for i, df in enumerate(dataframes):
-            dataframes[i] = df.loc[include_entries]
-
     for column in actual_header:
         for i, df in enumerate(dataframes):
             if(column in decimal_columns):
@@ -58,7 +69,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                 dataframes[i][column] = df[column].apply(format_doublefloat)
             else:
                 dataframes[i][column] = df[column].apply(format_int)
-
+   
     ungrouped_header = [x for x in shown_header if x not in grouping_header]
 
     latex_table = "\\begin{center}\n"
@@ -99,7 +110,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
 
         group_values = [dataframes[0].at[i, attr] for attr in grouping_attributes]
 
-        for col in highlight_cols:
+        for j, col in enumerate(highlight_cols):
             max_x = None
             max_x_idx = []
             for idx, df in enumerate(dataframes):
@@ -108,14 +119,15 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                     mask = mask & (df[attribute] == value)
                 if(df[mask].empty): continue
                 current_x = float(df[mask][col].values[0])
-                if max_x is None or (current_x > max_x and highlight_max) or (current_x < max_x and not highlight_max):
+                if (max_x is None) or (current_x > max_x and highlight_max[j] and current_x != 0) or (current_x < max_x and not highlight_max[j]):
+                    if(highlight_max[j] and current_x == 0): continue
                     max_x = current_x
                     max_x_idx = [idx]
                     continue    
                 if max_x == current_x:
                     max_x_idx.append(idx)
-            highlights[col][i] = max_x_idx
-
+            if max_x != None:
+                highlights[col][i] = max_x_idx
     for i, row in enumerate(dataframes[0].iterrows()):
         first_row = row[1]
         columns = []
@@ -162,24 +174,20 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
 if __name__ == "__main__":
 
     if len(sys.argv) < 4:
-        print("Usage: python3 CreateTable.py <table_type> <constrained> <outputfile> [<filtered_mus>] [<include_entries>]")
+        print("Usage: python3 CreateTable.py <table_type> <constrained> <outputfile>")
         exit(1)
 
     table_type = sys.argv[1]
     constrained = sys.argv[2] == "True"
     outputfile = sys.argv[3]
-    include_entries, filtered_mus = [], []
-    if(len(sys.argv) > 4):
-        filtered_mus = [int(x) for x in sys.argv[4].split(",")]
-    if(len(sys.argv) > 5):
-        include_entries = [int(x) for x in sys.argv[4].split(",")]
+    filtered = None
 
     upper_header = ["$1(R+I)$", "$X(R+I), \lambda = 0.1$", "$X(R+I), \lambda = 0.2$", "$X(R+I), \lambda = 2$", "$N-SWAP$"]
     grouping = ['mu', 'n', 'm']
     grouping_header = ["$\mu$", "$n$", "$m$"]
     decimal_columns = []
     double_decimal_columns = ['diversity']
-    highlight_cols, exclude_rows, highlight_max, highlight_colors = [], {}, False, {}
+    highlight_cols, exclude_rows, highlight_max, highlight_colors = [], {}, [], {}
     description = []
     if(constrained):
         grouping.append('alpha')
@@ -190,19 +198,38 @@ if __name__ == "__main__":
         grouping_header.append("$init$")
     
     if(table_type == "fitness"):
-        header = grouping_header + ["$D_0$", "$OBJ$", "$O\%$"]
-        columns = grouping + ['diversity', 'fitness', 'max_perc']
-        decimal_columns += ['fitness', 'max_perc']
-        highlight_cols = ['fitness', 'max_perc']
-        highlight_max = False
-        highlight_colors = {'fitness': 'lightgray', 'max_perc': 'gray'}
-        description = ['diversity', 'objective value', 'share of cases where objective value is optimal']
+        header = grouping_header + ["$D_0$", "$\Delta O$", "$O\%$"]
+        columns = grouping + ['diversity', 'opt_diff', 'opt_perc']
+        decimal_columns += ['opt_diff', 'opt_perc']
+        highlight_cols = ['opt_diff', 'opt_perc']
+        highlight_max = [False, True]
+        highlight_colors = {'opt_diff': 'lightgray', 'opt_perc': 'gray'}
+        description = ['diversity', 'average difference of objective to optimum tardy jobs to total jobs ratio', 'share of cases where objective value is optimal']
+        filtered = [
+            (2, 5, 1, 0.1),
+            (2, 5, 1, 0.3),
+            (2, 5, 1, 0.6),
+            (2, 5, 3, 0.1),
+            (10, 10, 1, 0.1),
+            (10, 10, 3, 0.1),
+            (10, 10, 5, 0.1),
+            (2, 100, 1, 0.1),
+            (25, 25, 1, 0.1),
+            (25,50,3,0.1),
+            (25,50,3,0.3),
+            (25,50,3,0.6),
+            (25, 100, 1, 0.6),
+            (25, 100, 5, 0.3),
+            (25, 100, 5, 0.6),
+            (50, 50, 1, 0.1),
+            (50, 100, 1, 0.1),
+        ]
     elif(table_type == "time"):
         header = grouping_header + ["$D_0$", "\\textbf{mean}", "\\textbf{std}"]
         columns = grouping + ['diversity', 'mean_generations_ratio', 'std_generations']
         decimal_columns += ['std_generations', 'mean_generations_ratio']
         highlight_cols = ['mean_generations_ratio']
-        highlight_max = False
+        highlight_max = [False]
         highlight_colors = {'mean_generations_ratio': 'lightgray'}
         description = ['diversity', 'mean number of generations', 'standard deviation of number of generations']
     elif(table_type == "diversity"):
@@ -210,7 +237,7 @@ if __name__ == "__main__":
         columns = grouping + ['diversity', 'max_perc']
         decimal_columns += ['max_perc']
         highlight_cols = ['diversity']
-        highlight_max = True
+        highlight_max = [True]
         highlight_colors = {'diversity': 'lightgray'}
         description = ['diversity', 'percentage of cases where diversity is max']
     elif(table_type == "robustness"):
@@ -218,7 +245,7 @@ if __name__ == "__main__":
         columns = grouping + ['diversity', 'Perc_rob_test_0', 'Perc_rob_test_1']
         decimal_columns += ['Perc_rob_test_0', 'Perc_rob_test_1']
         highlight_cols, exclude_rows = ['Perc_rob_test_0', 'Perc_rob_test_1'], {"init": "True"}
-        highlight_max = True
+        highlight_max = [True, True]
         highlight_colors = {'Perc_rob_test_0': 'lightgray', 'Perc_rob_test_1': 'gray'}
         description = ['diversity', 'percentage of successful tests with one constraint', 'percentage of successful tests with two constraints']
         
@@ -243,6 +270,6 @@ if __name__ == "__main__":
             f"results/out_rob_Mu1-{'' if constrained else 'un'}const_NSWAP_summary.csv"    
         ]
     
-    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered_mus, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, include_entries)
+    table = get_table(csv_files, header, columns, grouping, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered, highlight_cols, exclude_rows, highlight_max, highlight_colors, description)
     with open(outputfile, 'w') as f:
         f.write(table)
