@@ -205,7 +205,7 @@ if __name__ == "__main__":
         highlight_max = [False, True]
         highlight_colors = {'opt_diff': 'lightgray', 'opt_perc': 'gray'}
         description = ['diversity', 'average difference of objective to optimum tardy jobs to total jobs ratio', 'share of cases where objective value is optimal']
-        filtered = [
+        '''filtered = [
             (2, 5, 1, 0.1),
             (2, 5, 1, 0.3),
             (2, 5, 1, 0.6),
@@ -223,7 +223,7 @@ if __name__ == "__main__":
             (25, 100, 5, 0.6),
             (50, 50, 1, 0.1),
             (50, 100, 1, 0.1),
-        ]
+        ]'''
     elif(table_type == "time"):
         header = grouping_header + ["$D_0$", "\\textbf{mean}", "\\textbf{std}"]
         columns = grouping + ['diversity', 'mean_generations_ratio', 'std_generations']

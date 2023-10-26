@@ -5,18 +5,17 @@ import itertools
 
 def make_plot(input_file, output_file, constrained, combinations):
     df = pd.read_csv(input_file)
+    
     grouped = df.groupby(['mu', 'n', 'run'])
     mutation_labels = {'1RAI': '1(R+I)', 'XRAI_0.100000': 'X(R+I), λ = 0.1', 'XRAI_0.200000': 'X(R+I), λ = 0.2', "XRAI_2.000000": 'X(R+I), λ = 2', 'NSWAP': 'N-SWAP'}
 
     plt.rcParams.update({'font.size': 14})
     fig, axes = plt.subplots(1, len(combinations), figsize=(16, 5))
     if len(combinations) == 1: axes = [axes]
-
     for i, entry in enumerate(combinations):
         custom_colors = ["#BA55D3","#B0E0E6","#C71585", "#513566", "#7B68EE"]
         color_cycle = itertools.cycle(custom_colors)
         for (mu, n, run), group in grouped:
-            print(mu, n, run)
             if(mu not in entry['mu'] or n not in entry['n'] or run not in entry['run']): continue
 
             if(constrained):
@@ -93,11 +92,11 @@ if __name__ == "__main__":
 
     combinations_unconst = [
         {
-            "mu": [10],
+            "mu": [25],
             "n": [25],
-            "run": [0],
+            "run": [2],
             "operator": ['1RAI', 'XRAI_0.100000', 'XRAI_0.200000', "XRAI_2.000000", "NSWAP"],
-            "m": [1]
+            "m": [10]
         },
         {
             "mu": [2],
