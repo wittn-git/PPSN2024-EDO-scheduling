@@ -40,7 +40,7 @@ def filter_dataframe(df, columns, filtered):
     filtered_df = pd.concat(filtered_rows).drop_duplicates().reset_index()
     return filtered_df
 
-def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered, highlight_cols, exclude_rows, highlight_max, highlight_colors, description, scriptsize=True):
+def get_table(csv_file, shown_header, actual_header, grouping_attributes, grouping_header, decimal_columns, double_decimal_columns, upper_header, filtered, highlight_cols, exclude_rows, highlight_max, highlight_colors, description):
     
     dataframes = [pd.read_csv(file) for file in csv_file]
     # const size filters
@@ -49,6 +49,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
         dataframes[i] = df[df['mu'] <= 10]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 50))]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] > 25) & (dataframes[i]['m'] > 1))]
+    
     for i, df in enumerate(dataframes):
         dataframes[i] = df[df['mu'] >= 10]
         dataframes[i] = dataframes[i][~((dataframes[i]['mu'] == 10) & (dataframes[i]['n'] < 50))]
@@ -75,9 +76,9 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
     latex_table = "\\begin{center}\n"
     latex_table += "\\renewcommand{\\tabcolsep}{4pt}\n"
     latex_table += " \\renewcommand{\\arraystretch}{1.1}\n"
-    if scriptsize: latex_table += " \\begin{scriptsize}\n"
+    latex_table += " \\begin{customsize}\n"
     if("max_perc" in decimal_columns):
-        latex_table += "\\begin{tabular}{*{" + str((len(grouping_attributes)+len(ungrouped_header) * len(dataframes))) + "}{>{\\raggedleft\\arraybackslash}p{1cm}}}"
+        latex_table += "\\begin{tabular}{"+ (len(grouping_attributes) * "c") + "*{"+str(len(ungrouped_header) * len(dataframes)) + "}{>{\\raggedleft\\arraybackslash}p{1cm}}}"
     else: latex_table += f" \\begin{{{'tabular'}}}{{{'r'*(len(grouping_attributes)+len(ungrouped_header) * len(dataframes))}}}\n"
     latex_table += " \\toprule\n"
     latex_table += f"\multicolumn{{{len(grouping_header)}}}{{{'c'}}}{{{''}}}" 
@@ -128,6 +129,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                     max_x_idx.append(idx)
             if max_x != None:
                 highlights[col][i] = max_x_idx
+    first_new = True
     for i, row in enumerate(dataframes[0].iterrows()):
         first_row = row[1]
         columns = []
@@ -138,7 +140,11 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
                 if(not new_group): 
                     new_group = True
                     if(attribute != grouping_attributes[-1]):
-                        latex_table += f"\cline{{{grouping_attributes.index(attribute)+1}-{len(grouping_header) + len(ungrouped_header) * len(dataframes)}}}\n"
+                        if first_new: 
+                            latex_table += "\midrule\n"
+                            first_new = False
+                        else:
+                            latex_table += f"\hhline{{{(grouping_attributes.index(attribute))*'~'}{(len(grouping_header) + len(ungrouped_header) * len(dataframes) - (grouping_attributes.index(attribute)))*'-'}}}\n"
                 currents[attribute] = first_row[attribute]
                 occ_keys = []
                 for attr in grouping_attributes:
@@ -167,7 +173,7 @@ def get_table(csv_file, shown_header, actual_header, grouping_attributes, groupi
         latex_table += header + " " + description[i] + (", " if i < len(ungrouped_header)-1 else "")
     latex_table += "} \\\\ \n"
     latex_table += "  \end{tabular}\n"
-    if scriptsize: latex_table += " \end{scriptsize}\n"
+    latex_table += " \end{customsize}\n"
     latex_table += " \end{center}\n"
     return latex_table
 

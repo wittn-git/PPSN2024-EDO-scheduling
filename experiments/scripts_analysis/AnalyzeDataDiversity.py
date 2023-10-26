@@ -109,7 +109,7 @@ def get_summary(df, grouping_columns, algorithm, mutation, runs, constrained):
 
     summary['std_generations'] = grouped['generations'].std().reset_index(drop=True)
     summary['max_perc'] = grouped.apply(max_perc).reset_index(drop=True)
-    summary['opt_perc'] = grouped.apply(opt_perc).reset_index(drop=True)
+    if(constrained): summary['opt_perc'] = grouped.apply(opt_perc).reset_index(drop=True)
     summary['mean_generations_ratio'] = summary['generations'] / summary['max_generations']
     if(constrained): summary['opt_diff'] = (summary['fitness'] - summary['opt']) / summary['n']
 
